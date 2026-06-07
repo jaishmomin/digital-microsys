@@ -1,3 +1,43 @@
+// TEMPORARY - DELETE AFTER SEEDING
+router.post('/seed-admin', async (req, res) => {
+  try {
+    const { secret } = req.body;
+    
+    // Security check - only you know this secret
+    if (secret !== process.env.SEED_SECRET) {
+      return res.status(403).json({ 
+        message: 'Forbidden' 
+      });
+    }
+
+    const existing = await User.findOne({ 
+      role: 'admin' 
+    });
+    
+    if (existing) {
+      return res.json({ 
+        message: 'Admin already exists' 
+      });
+    }
+
+    const admin = await User.create({
+      name: process.env.ADMIN_NAME,
+      email: process.env.ADMIN_EMAIL,
+      password: process.env.ADMIN_PASSWORD,
+      role: 'admin',
+      isActive: true
+    });
+
+    res.json({ 
+      message: 'Admin created!', 
+      email: admin.email 
+    });
+
+  } catch(err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 const express = require('express');
 const { body } = require('express-validator');
 const router = express.Router();
