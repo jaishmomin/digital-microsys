@@ -1,3 +1,4 @@
+import { useTheme } from '../../context/ThemeContext';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import API from '../../services/api';
@@ -13,6 +14,7 @@ import {
 } from 'react-icons/hi2';
 
 const ResultDetail = () => {
+  const { theme } = useTheme();
   const { id } = useParams();
   const navigate = useNavigate();
   const [result, setResult] = useState(null);
@@ -62,8 +64,8 @@ const ResultDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid var(--accent-blue-bg)', borderTopColor: 'var(--accent-blue)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     );
   }
@@ -74,26 +76,25 @@ const ResultDetail = () => {
   const violations = result.violationRecords || [];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div style={{ padding: '32px 40px', maxWidth: '900px', margin: '0 auto' }}>
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/student/results')} className="p-2 rounded-xl hover:bg-surface-800/50 text-surface-400 hover:text-surface-200 transition-colors cursor-pointer">
-          <HiOutlineArrowLeft className="w-5 h-5" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
+        <button onClick={() => navigate('/student/results')} style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '8px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+          <HiOutlineArrowLeft size={16} />
         </button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-surface-100">Result Detail</h1>
-          <p className="text-surface-500 text-sm mt-0.5">{result.testId?.title}</p>
+        <div style={{ flex: 1 }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '2px', fontFamily: "'Sora', sans-serif" }}>Result Detail</h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{result.testId?.title}</p>
         </div>
-        <button onClick={handleDownloadPDF} disabled={pdfLoading}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-primary-500/20 disabled:opacity-50 cursor-pointer">
+        <button onClick={handleDownloadPDF} disabled={pdfLoading} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--accent-blue)', border: 'none', borderRadius: '10px', padding: '10px 20px', color: '#ffffff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', opacity: pdfLoading ? 0.5 : 1 }}>
           {pdfLoading ? (
-            <span className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#ffffff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
               Generating...
             </span>
           ) : (
             <>
-              <HiOutlineArrowDownTray className="w-4 h-4" /> Download PDF
+              <HiOutlineArrowDownTray size={16} /> Download PDF
             </>
           )}
         </button>
@@ -102,74 +103,75 @@ const ResultDetail = () => {
       {/* Result Summary (reusable component) */}
       <ResultSummary result={result} />
 
-      {/* Violations Section */}
-      {violations.length > 0 && (
-        <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-6">
-          <h2 className="text-sm font-semibold text-surface-300 mb-4 flex items-center gap-2">
-            <HiOutlineShieldExclamation className="w-4 h-4 text-amber-400" />
-            Violations ({violations.length})
-          </h2>
-          <div className="space-y-2">
-            {violations.map((v, i) => (
-              <div key={i} className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                <span className="text-sm text-amber-400 font-medium capitalize">{v.violationType?.replace(/([A-Z])/g, ' $1').trim()}</span>
-                <span className="text-xs text-surface-500">{formatDate(v.timestamp)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Answer Comparison */}
-      <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-surface-800/50">
-          <h2 className="text-sm font-semibold text-surface-300">Answer Comparison</h2>
+      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '16px', overflow: 'hidden', marginTop: '16px', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>Answer Comparison</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="border-b border-surface-800/50">
-                <th className="text-center px-4 py-3 text-xs font-semibold text-surface-400 uppercase w-14">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-surface-400 uppercase">Question</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-surface-400 uppercase w-20">Yours</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-surface-400 uppercase w-20">Correct</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-surface-400 uppercase w-16">Result</th>
+              <tr style={{ background: 'var(--bg-hover)', borderBottom: '1px solid var(--border-color)' }}>
+                <th style={{ padding: '12px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: '60px' }}>#</th>
+                <th style={{ padding: '12px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Question</th>
+                <th style={{ padding: '12px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: '100px' }}>Yours</th>
+                <th style={{ padding: '12px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: '100px' }}>Correct</th>
+                <th style={{ padding: '12px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: '80px' }}>Result</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-800/20">
-              {comparison.map((q) => (
-                <tr key={q.questionNo} className={`${
-                  q.isUnattempted ? 'bg-amber-500/3' : q.isCorrect ? 'bg-emerald-500/3' : 'bg-red-500/3'
-                } hover:bg-surface-800/20 transition-colors`}>
-                  <td className="px-4 py-3 text-center text-sm font-bold text-surface-400">{q.questionNo}</td>
-                  <td className="px-4 py-3 text-sm text-surface-300 max-w-xs">
-                    <p className="truncate">{q.questionText}</p>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`inline-block w-8 h-8 rounded-lg text-xs font-bold leading-8 ${
-                      q.isUnattempted ? 'bg-surface-700/50 text-surface-500'
-                      : q.isCorrect ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {q.studentAnswer || '—'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className="inline-block w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-bold leading-8">
-                      {q.correctAnswer}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {q.isUnattempted ? (
-                      <HiOutlineMinusCircle className="w-5 h-5 text-amber-400 mx-auto" />
-                    ) : q.isCorrect ? (
-                      <HiOutlineCheckCircle className="w-5 h-5 text-emerald-400 mx-auto" />
-                    ) : (
-                      <HiOutlineXCircle className="w-5 h-5 text-red-400 mx-auto" />
-                    )}
-                  </td>
-                </tr>
-              ))}
+            <tbody>
+              {comparison.map((q) => {
+                const isCorrect = q.isCorrect;
+                const isUnattempted = q.isUnattempted;
+                
+                let rowBg = 'transparent';
+                let rowBorder = 'none';
+                
+                if (isUnattempted) {
+                  rowBg = 'rgba(234,179,8,0.05)';
+                  rowBorder = '3px solid #eab308';
+                } else if (isCorrect) {
+                  rowBg = 'rgba(16,185,129,0.05)';
+                  rowBorder = '3px solid #10b981';
+                } else {
+                  rowBg = 'rgba(239,68,68,0.05)';
+                  rowBorder = '3px solid #ef4444';
+                }
+
+                return (
+                  <tr key={q.questionNo} style={{ background: rowBg, borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', fontSize: '14px', fontWeight: '700', color: 'var(--text-secondary)', borderLeft: rowBorder }}>
+                      {q.questionNo}
+                    </td>
+                    <td style={{ padding: '14px 20px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                      {q.questionText}
+                    </td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center' }}>
+                      {q.isUnattempted ? (
+                        <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>—</span>
+                      ) : (
+                        <span style={{ display: 'inline-block', padding: '4px 10px', background: 'var(--accent-blue-bg)', color: 'var(--accent-blue)', borderRadius: '6px', fontSize: '13px', fontWeight: '600' }}>
+                          {q.studentAnswer}
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center' }}>
+                      <span style={{ display: 'inline-block', padding: '4px 10px', background: 'var(--accent-green-bg)', color: 'var(--accent-green)', borderRadius: '6px', fontSize: '13px', fontWeight: '600' }}>
+                        {q.correctAnswer}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center' }}>
+                      {q.isUnattempted ? (
+                        <div style={{ color: 'var(--accent-amber)', display: 'flex', justifyContent: 'center' }}><HiOutlineMinusCircle size={20} /></div>
+                      ) : q.isCorrect ? (
+                        <div style={{ color: 'var(--accent-green)', display: 'flex', justifyContent: 'center' }}><HiOutlineCheckCircle size={20} /></div>
+                      ) : (
+                        <div style={{ color: 'var(--accent-red)', display: 'flex', justifyContent: 'center' }}><HiOutlineXCircle size={20} /></div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

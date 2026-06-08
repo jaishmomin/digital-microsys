@@ -32,7 +32,6 @@ const UploadAnswerKey = () => {
       setTestTitle(testRes.data.data.title);
       setQuestions(qRes.data.data);
 
-      // Load existing answer key if any
       try {
         const akRes = await API.get(`/tests/${id}/answerkey`);
         const existingAnswers = {};
@@ -66,7 +65,6 @@ const UploadAnswerKey = () => {
   };
 
   const handleSubmit = async () => {
-    // Validate all questions have answers
     const missing = questions.filter((q) => !answers[q.questionNo]);
     if (missing.length > 0) {
       return toast.error(`${missing.length} question(s) don't have answers selected`);
@@ -91,8 +89,8 @@ const UploadAnswerKey = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid var(--accent-amber-bg)', borderTopColor: 'var(--accent-amber)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     );
   }
@@ -100,89 +98,72 @@ const UploadAnswerKey = () => {
   const answeredCount = questions.filter((q) => answers[q.questionNo]).length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/admin/tests')} className="p-2 rounded-xl hover:bg-surface-800/50 text-surface-400 hover:text-surface-200 transition-colors cursor-pointer">
-          <HiOutlineArrowLeft className="w-5 h-5" />
+    <div style={{ padding: '32px 40px', maxWidth: '900px', margin: '0 auto' }}>
+      
+      {/* Page Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
+        <button onClick={() => navigate('/admin/tests')} style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '8px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+          <HiOutlineArrowLeft size={16} />
         </button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-surface-100">Answer Key</h1>
-          <p className="text-surface-500 text-sm mt-0.5">{testTitle} · {answeredCount}/{questions.length} answered</p>
+        <div>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '2px', fontFamily: "'Sora', sans-serif" }}>Upload Answer Key</h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{testTitle} · {answeredCount}/{questions.length} answered</p>
         </div>
       </div>
 
       {questions.length === 0 ? (
-        <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-12 text-center">
-          <HiOutlineKey className="w-12 h-12 text-surface-600 mx-auto mb-3" />
-          <p className="text-surface-400 text-sm">No questions found for this test.</p>
-          <p className="text-surface-500 text-xs mt-1">Add questions first, then set the answer key.</p>
-          <button onClick={() => navigate(`/admin/tests/${id}/questions`)}
-            className="mt-4 px-4 py-2 bg-amber-500/20 text-amber-400 rounded-xl text-sm font-medium hover:bg-amber-500/30 transition-colors cursor-pointer">
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '48px', textAlign: 'center' }}>
+          <HiOutlineKey size={48} style={{ color: 'var(--text-muted)', margin: '0 auto 12px' }} />
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>No questions found for this test.</p>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Add questions first, then set the answer key.</p>
+          <button onClick={() => navigate(`/admin/tests/${id}/questions`)} style={{ marginTop: '16px', padding: '8px 16px', background: 'var(--accent-amber-bg)', color: 'var(--accent-amber)', borderRadius: '12px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', border: 'none' }}>
             Add Questions
           </button>
         </div>
       ) : (
         <>
           {/* Bulk Fill */}
-          <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-5">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <p className="text-sm font-medium text-surface-300">Bulk Fill:</p>
-              <div className="flex gap-2">
-                {['A', 'B', 'C', 'D'].map((opt) => (
-                  <button key={opt} onClick={() => setBulkOption(opt)}
-                    className={`w-10 h-10 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                      bulkOption === opt
-                        ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                        : 'bg-surface-800/50 text-surface-400 hover:bg-surface-700/50 border border-surface-700/50'
-                    }`}>
-                    {opt}
-                  </button>
-                ))}
-              </div>
-              <button onClick={handleBulkFill} disabled={!bulkOption}
-                className="px-4 py-2 bg-surface-800/50 hover:bg-surface-700/50 border border-surface-700/50 text-surface-300 hover:text-surface-100 rounded-xl text-sm font-medium transition-all disabled:opacity-40 cursor-pointer">
-                Apply to All
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', background: 'var(--bg-hover)', borderRadius: '12px', marginBottom: '20px', border: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)' }}>Bulk Fill:</span>
+            {['A','B','C','D'].map(opt => (
+              <button key={opt} onClick={() => setBulkOption(opt)} style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1.5px solid var(--border-input)', background: bulkOption === opt ? 'var(--accent-amber)' : 'var(--bg-surface)', color: bulkOption === opt ? '#fff' : 'var(--text-primary)', fontSize: '14px', fontWeight: '700', cursor: 'pointer' }}>
+                {opt}
               </button>
-            </div>
+            ))}
+            <button onClick={handleBulkFill} disabled={!bulkOption} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-input)', background: 'var(--bg-surface)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', opacity: !bulkOption ? 0.5 : 1 }}>
+              Apply to All
+            </button>
           </div>
 
           {/* Answer Grid */}
-          <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-6">
-            <div className="space-y-3">
-              {questions.map((q) => (
-                <div key={q._id} className="flex items-center gap-4 px-4 py-3 rounded-xl bg-surface-800/20 hover:bg-surface-800/40 transition-colors">
-                  <span className="w-12 text-sm font-bold text-surface-400 shrink-0">Q{q.questionNo}</span>
-                  <p className="flex-1 text-sm text-surface-300 truncate min-w-0">{q.questionText}</p>
-                  <div className="flex gap-1.5 shrink-0">
-                    {['A', 'B', 'C', 'D'].map((opt) => (
-                      <button key={opt} onClick={() => setAnswer(q.questionNo, opt)}
-                        className={`w-9 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          answers[q.questionNo] === opt
-                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
-                            : 'bg-surface-700/50 text-surface-400 hover:bg-surface-600/50 border border-surface-700/50'
-                        }`}>
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '16px', overflow: 'hidden', marginBottom: '24px' }}>
+            {questions.map((q, i) => (
+              <div key={q._id} className="answer-key-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--accent-blue)', minWidth: '30px' }}>Q{i+1}</span>
+                  <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>{q.questionText}</span>
                 </div>
-              ))}
-            </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {['A','B','C','D'].map(opt => (
+                    <button key={opt} onClick={() => setAnswer(q.questionNo, opt)} className={`abcd-button ${answers[q.questionNo] === opt ? 'selected' : ''}`} style={{ width: '40px', height: '40px', borderRadius: '8px', border: answers[q.questionNo] === opt ? '2px solid var(--accent-blue)' : '1.5px solid var(--border-input)', background: answers[q.questionNo] === opt ? 'var(--accent-blue)' : 'var(--bg-surface)', color: answers[q.questionNo] === opt ? '#ffffff' : 'var(--text-primary)', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.15s' }}>
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Submit */}
-          <div className="flex items-center gap-4">
-            <button onClick={handleSubmit} disabled={submitting}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-amber-500/25 text-sm disabled:opacity-50 cursor-pointer">
-              <HiOutlineKey className="w-4 h-4" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button onClick={handleSubmit} disabled={submitting} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--accent-blue)', border: 'none', borderRadius: '10px', padding: '12px 28px', color: '#ffffff', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>
+              <HiOutlineKey size={18} />
               {submitting ? 'Saving...' : 'Save Answer Key'}
             </button>
-
             {saved && (
-              <div className="flex items-center gap-2 text-emerald-400 animate-fade-in">
-                <HiOutlineCheckCircle className="w-5 h-5" />
-                <span className="text-sm font-medium">Answer key saved!</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-green)', fontSize: '14px', fontWeight: '500' }}>
+                <HiOutlineCheckCircle size={20} />
+                Answer key saved!
               </div>
             )}
           </div>

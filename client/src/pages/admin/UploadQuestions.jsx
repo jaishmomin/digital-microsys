@@ -140,133 +140,127 @@ const UploadQuestions = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid var(--accent-amber-bg)', borderTopColor: 'var(--accent-amber)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     );
   }
 
+  const labelStyle = { display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' };
+  const inputStyle = { width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px', outline: 'none', boxSizing: 'border-box' };
+  const thStyle = { padding: '12px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' };
+  const tdStyle = { padding: '14px 20px', fontSize: '14px', color: 'var(--text-primary)' };
+
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/admin/tests')} className="p-2 rounded-xl hover:bg-surface-800/50 text-surface-400 hover:text-surface-200 transition-colors cursor-pointer">
-          <HiOutlineArrowLeft className="w-5 h-5" />
+    <div style={{ padding: '32px 40px', maxWidth: '900px', margin: '0 auto' }}>
+      
+      {/* Page Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
+        <button onClick={() => navigate('/admin/tests')} style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '8px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+          <HiOutlineArrowLeft size={16} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-surface-100">Upload Questions</h1>
-          <p className="text-surface-500 text-sm mt-0.5">{testTitle} · {existing.length} question{existing.length !== 1 ? 's' : ''} added</p>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '2px', fontFamily: "'Sora', sans-serif" }}>Upload Questions</h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{testTitle} · {existing.length} questions added</p>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-surface-900/60 border border-surface-800/50 rounded-xl p-1 w-fit">
-        <button onClick={() => setActiveTab('manual')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${activeTab === 'manual' ? 'bg-amber-500/20 text-amber-400' : 'text-surface-400 hover:text-surface-200'}`}>
-          <HiOutlineDocumentText className="w-4 h-4" /> Manual Entry
+      {/* Tab Switcher */}
+      <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-hover)', borderRadius: '10px', padding: '4px', marginBottom: '24px', width: 'fit-content', border: '1px solid var(--border-color)' }}>
+        <button onClick={() => setActiveTab('manual')} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: '500', background: activeTab === 'manual' ? 'var(--accent-blue)' : 'transparent', color: activeTab === 'manual' ? '#ffffff' : 'var(--text-secondary)' }}>
+          Manual Entry
         </button>
-        <button onClick={() => setActiveTab('csv')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${activeTab === 'csv' ? 'bg-amber-500/20 text-amber-400' : 'text-surface-400 hover:text-surface-200'}`}>
-          <HiOutlineTableCells className="w-4 h-4" /> CSV Upload
+        <button onClick={() => setActiveTab('csv')} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: '500', background: activeTab === 'csv' ? 'var(--accent-blue)' : 'transparent', color: activeTab === 'csv' ? '#ffffff' : 'var(--text-secondary)' }}>
+          CSV Upload
         </button>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'manual' ? (
-        <div className="space-y-4">
+        <div>
           {questions.map((q, idx) => (
-            <div key={idx} className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-surface-300">Question {idx + 1}</h3>
+            <div key={idx} className="question-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', marginBottom: '16px', boxShadow: 'var(--shadow-sm)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>Question {idx + 1}</h3>
                 {questions.length > 1 && (
-                  <button onClick={() => removeQuestion(idx)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-surface-500 hover:text-red-400 transition-colors cursor-pointer">
-                    <HiOutlineTrash className="w-4 h-4" />
+                  <button onClick={() => removeQuestion(idx)} style={{ background: 'var(--accent-red-bg)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', padding: '6px 12px', color: 'var(--accent-red)', cursor: 'pointer', fontSize: '13px' }}>
+                    Remove
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-surface-400 mb-1">Q.No</label>
-                  <input type="number" value={q.questionNo} onChange={(e) => updateQuestion(idx, 'questionNo', e.target.value)} placeholder="Auto"
-                    className="w-full px-3 py-2.5 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 text-sm" />
+
+              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px', gap: '12px', marginBottom: '12px' }}>
+                <div>
+                  <label style={labelStyle}>Q. No</label>
+                  <input type="number" value={q.questionNo} onChange={(e) => updateQuestion(idx, 'questionNo', e.target.value)} placeholder="Auto" style={inputStyle} />
                 </div>
-                <div className="sm:col-span-8">
-                  <label className="block text-xs font-medium text-surface-400 mb-1">Question Text *</label>
-                  <input value={q.questionText} onChange={(e) => updateQuestion(idx, 'questionText', e.target.value)} required
-                    className="w-full px-3 py-2.5 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 text-sm"
-                    placeholder="Enter question text" />
+                <div>
+                  <label style={labelStyle}>Question Text *</label>
+                  <input value={q.questionText} onChange={(e) => updateQuestion(idx, 'questionText', e.target.value)} required placeholder="Enter question text" style={inputStyle} />
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-surface-400 mb-1">Marks</label>
-                  <input type="number" value={q.marks} onChange={(e) => updateQuestion(idx, 'marks', e.target.value)} min="0"
-                    className="w-full px-3 py-2.5 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 focus:outline-none focus:ring-2 focus:ring-amber-500/40 text-sm" />
+                <div>
+                  <label style={labelStyle}>Marks</label>
+                  <input type="number" value={q.marks} onChange={(e) => updateQuestion(idx, 'marks', e.target.value)} min="0" style={inputStyle} />
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 {['A', 'B', 'C', 'D'].map((opt) => (
                   <div key={opt}>
-                    <label className="block text-xs font-medium text-surface-400 mb-1">Option {opt} *</label>
-                    <input value={q[`option${opt}`]} onChange={(e) => updateQuestion(idx, `option${opt}`, e.target.value)} required
-                      className="w-full px-3 py-2.5 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 text-sm"
-                      placeholder={`Option ${opt}`} />
+                    <label style={labelStyle}>Option {opt} *</label>
+                    <input value={q[`option${opt}`]} onChange={(e) => updateQuestion(idx, `option${opt}`, e.target.value)} required placeholder={`Option ${opt}`} style={inputStyle} />
                   </div>
                 ))}
               </div>
             </div>
           ))}
 
-          <div className="flex items-center gap-3">
-            <button onClick={addQuestion}
-              className="flex items-center gap-2 px-4 py-2.5 bg-surface-800/50 hover:bg-surface-700/50 border border-surface-700/50 text-surface-300 hover:text-surface-100 rounded-xl text-sm font-medium transition-all cursor-pointer">
-              <HiOutlinePlus className="w-4 h-4" /> Add Another Question
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
+            <button onClick={addQuestion} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-hover)', border: '1px solid var(--border-input)', borderRadius: '10px', padding: '11px 20px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
+              + Add Another Question
             </button>
-            <button onClick={handleManualSubmit} disabled={submitting}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-amber-500/25 text-sm disabled:opacity-50 cursor-pointer">
-              {submitting ? 'Submitting...' : `Submit ${questions.length} Question${questions.length !== 1 ? 's' : ''}`}
+            <button onClick={handleManualSubmit} disabled={submitting} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--accent-blue)', border: 'none', borderRadius: '10px', padding: '11px 24px', color: '#ffffff', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+              {submitting ? 'Submitting...' : `Submit ${questions.length} Question(s)`}
             </button>
           </div>
         </div>
       ) : (
-        <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-6 space-y-6">
-          {/* CSV Upload */}
-          <div className="flex flex-col sm:flex-row items-start gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-surface-300 mb-2">Upload CSV File</label>
-              <input ref={fileRef} type="file" accept=".csv" onChange={handleFileChange}
-                className="w-full text-sm text-surface-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-amber-500/20 file:text-amber-400 hover:file:bg-amber-500/30 file:cursor-pointer file:transition-colors" />
-              <p className="text-xs text-surface-500 mt-2">CSV format: questionNo, questionText, optionA, optionB, optionC, optionD, marks</p>
+        <div className="question-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '20px' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>Upload CSV File</label>
+              <input ref={fileRef} type="file" accept=".csv" onChange={handleFileChange} style={{ display: 'block', width: '100%', padding: '10px', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '8px', color: 'var(--text-primary)' }} />
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>CSV format: questionNo, questionText, optionA, optionB, optionC, optionD, marks</p>
             </div>
-            <button onClick={downloadSampleCSV}
-              className="flex items-center gap-2 px-4 py-2.5 bg-surface-800/50 hover:bg-surface-700/50 border border-surface-700/50 text-surface-300 hover:text-surface-100 rounded-xl text-sm font-medium transition-all cursor-pointer whitespace-nowrap">
-              <HiOutlineArrowDownTray className="w-4 h-4" /> Sample CSV
+            <button onClick={downloadSampleCSV} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-hover)', border: '1px solid var(--border-input)', borderRadius: '8px', padding: '10px 16px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', marginTop: '28px' }}>
+              <HiOutlineArrowDownTray size={16} /> Sample CSV
             </button>
           </div>
 
-          {/* Preview */}
           {csvPreview.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-surface-300 mb-3">Preview ({csvPreview.length} rows)</h3>
-              <div className="overflow-x-auto rounded-xl border border-surface-700/30">
-                <table className="w-full text-sm">
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px' }}>Preview ({csvPreview.length} rows)</h3>
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr className="bg-surface-800/50">
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-surface-400">#</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-surface-400">Question</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-surface-400">A</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-surface-400">B</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-surface-400">C</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-surface-400">D</th>
+                    <tr style={{ background: 'var(--bg-hover)' }}>
+                      <th style={thStyle}>#</th>
+                      <th style={thStyle}>Question</th>
+                      <th style={thStyle}>A</th>
+                      <th style={thStyle}>B</th>
+                      <th style={thStyle}>C</th>
+                      <th style={thStyle}>D</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-surface-800/20">
+                  <tbody>
                     {csvPreview.map((row, i) => (
-                      <tr key={i} className="hover:bg-surface-800/20">
-                        <td className="px-3 py-2 text-surface-400">{row.questionno || i + 1}</td>
-                        <td className="px-3 py-2 text-surface-200 max-w-xs truncate">{row.questiontext || row.question}</td>
-                        <td className="px-3 py-2 text-surface-300">{row.optiona}</td>
-                        <td className="px-3 py-2 text-surface-300">{row.optionb}</td>
-                        <td className="px-3 py-2 text-surface-300">{row.optionc}</td>
-                        <td className="px-3 py-2 text-surface-300">{row.optiond}</td>
+                      <tr key={i} style={{ borderTop: '1px solid var(--border-color)' }}>
+                        <td style={tdStyle}>{row.questionno || i + 1}</td>
+                        <td style={tdStyle}>{row.questiontext || row.question}</td>
+                        <td style={tdStyle}>{row.optiona}</td>
+                        <td style={tdStyle}>{row.optionb}</td>
+                        <td style={tdStyle}>{row.optionc}</td>
+                        <td style={tdStyle}>{row.optiond}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -275,41 +269,41 @@ const UploadQuestions = () => {
             </div>
           )}
 
-          <button onClick={handleCsvUpload} disabled={!csvFile || csvUploading}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-amber-500/25 text-sm disabled:opacity-50 cursor-pointer">
-            <HiOutlineArrowUpTray className="w-4 h-4" />
-            {csvUploading ? 'Uploading...' : 'Confirm Upload'}
+          <button onClick={handleCsvUpload} disabled={!csvFile || csvUploading} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--accent-blue)', border: 'none', borderRadius: '10px', padding: '11px 24px', color: '#ffffff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', opacity: (!csvFile || csvUploading) ? 0.5 : 1 }}>
+            <HiOutlineArrowUpTray size={16} /> {csvUploading ? 'Uploading...' : 'Confirm Upload'}
           </button>
         </div>
       )}
 
-      {/* Existing Questions */}
+      {/* Existing Questions Table */}
       {existing.length > 0 && (
-        <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-surface-200 mb-4">Existing Questions ({existing.length})</h2>
-          <div className="overflow-x-auto rounded-xl border border-surface-700/30">
-            <table className="w-full text-sm">
+        <div style={{ marginTop: '32px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '16px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>Existing Questions ({existing.length})</h3>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="bg-surface-800/50">
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-surface-400">#</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-surface-400">Question</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-surface-400">A</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-surface-400">B</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-surface-400">C</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-surface-400">D</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-surface-400">Marks</th>
+                <tr style={{ background: 'var(--bg-hover)' }}>
+                  <th style={thStyle}>#</th>
+                  <th style={thStyle}>Question</th>
+                  <th style={thStyle}>A</th>
+                  <th style={thStyle}>B</th>
+                  <th style={thStyle}>C</th>
+                  <th style={thStyle}>D</th>
+                  <th style={thStyle}>Marks</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-800/20">
-                {existing.map((q) => (
-                  <tr key={q._id} className="hover:bg-surface-800/20">
-                    <td className="px-3 py-2 text-surface-400 font-medium">{q.questionNo}</td>
-                    <td className="px-3 py-2 text-surface-200 max-w-xs truncate">{q.questionText}</td>
-                    <td className="px-3 py-2 text-surface-300 text-center text-xs">{q.optionA}</td>
-                    <td className="px-3 py-2 text-surface-300 text-center text-xs">{q.optionB}</td>
-                    <td className="px-3 py-2 text-surface-300 text-center text-xs">{q.optionC}</td>
-                    <td className="px-3 py-2 text-surface-300 text-center text-xs">{q.optionD}</td>
-                    <td className="px-3 py-2 text-surface-300 text-center">{q.marks}</td>
+              <tbody>
+                {existing.map((q, i) => (
+                  <tr key={q._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={tdStyle}>{q.questionNo}</td>
+                    <td style={tdStyle}>{q.questionText}</td>
+                    <td style={tdStyle}>{q.optionA}</td>
+                    <td style={tdStyle}>{q.optionB}</td>
+                    <td style={tdStyle}>{q.optionC}</td>
+                    <td style={tdStyle}>{q.optionD}</td>
+                    <td style={tdStyle}>{q.marks}</td>
                   </tr>
                 ))}
               </tbody>
@@ -317,6 +311,7 @@ const UploadQuestions = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

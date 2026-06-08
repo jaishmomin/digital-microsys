@@ -34,31 +34,37 @@ const ResultSummary = ({ result, showViolationBanner = true }) => {
   const donutStyle = {
     background: `conic-gradient(
       ${passed ? '#10b981' : '#ef4444'} 0% ${percentage}%,
-      rgba(255,255,255,0.08) ${percentage}% 100%
+      var(--bg-hover) ${percentage}% 100%
     )`,
   };
 
   const stats = [
-    { label: 'Correct', value: correct, icon: HiOutlineCheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-    { label: 'Incorrect', value: incorrect, icon: HiOutlineXCircle, color: 'text-red-400', bg: 'bg-red-500/15' },
-    { label: 'Unattempted', value: unattempted, icon: HiOutlineMinusCircle, color: 'text-amber-400', bg: 'bg-amber-500/15' },
-    { label: 'Time Taken', value: formatTime(result.timeTaken), icon: HiOutlineClock, color: 'text-blue-400', bg: 'bg-blue-500/15' },
+    { label: 'Correct', value: correct, icon: HiOutlineCheckCircle, color: 'var(--accent-green)', bg: 'var(--accent-green-bg)' },
+    { label: 'Incorrect', value: incorrect, icon: HiOutlineXCircle, color: 'var(--accent-red)', bg: 'var(--accent-red-bg)' },
+    { label: 'Unattempted', value: unattempted, icon: HiOutlineMinusCircle, color: 'var(--accent-amber)', bg: 'var(--accent-amber-bg)' },
+    { label: 'Time Taken', value: formatTime(result.timeTaken), icon: HiOutlineClock, color: 'var(--accent-blue)', bg: 'var(--accent-blue-bg)' },
   ];
 
   return (
-    <div className="space-y-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Main result card */}
-      <div className={`rounded-2xl p-6 border ${passed ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
-        <div className="flex flex-col sm:flex-row items-center gap-6">
+      <div style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '16px',
+        padding: '28px',
+        boxShadow: 'var(--shadow-sm)'
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '24px' }}>
           {/* Donut */}
-          <div className="relative w-28 h-28 shrink-0">
-            <div className="absolute inset-0 rounded-full" style={donutStyle} />
-            <div className="absolute inset-2 bg-surface-950 rounded-full flex items-center justify-center">
-              <div className="text-center">
-                <p className={`text-2xl font-bold ${passed ? 'text-emerald-400' : 'text-red-400'}`}>
+          <div style={{ position: 'relative', width: '112px', height: '112px', flexShrink: 0 }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', ...donutStyle }} />
+            <div style={{ position: 'absolute', inset: '8px', background: 'var(--bg-surface)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: '24px', fontWeight: '700', color: passed ? 'var(--accent-green)' : 'var(--accent-red)', fontFamily: "'Sora', sans-serif" }}>
                   {percentage}%
                 </p>
-                <p className="text-[10px] text-surface-500 uppercase tracking-wider">
+                <p style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {passed ? 'Passed' : 'Failed'}
                 </p>
               </div>
@@ -66,21 +72,24 @@ const ResultSummary = ({ result, showViolationBanner = true }) => {
           </div>
 
           {/* Score Info */}
-          <div className="flex-1 text-center sm:text-left">
-            <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
-              <HiOutlineTrophy className={`w-6 h-6 ${passed ? 'text-emerald-400' : 'text-red-400'}`} />
-              <p className={`text-3xl font-bold ${passed ? 'text-emerald-400' : 'text-red-400'}`}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <HiOutlineTrophy size={24} color={passed ? 'var(--accent-green)' : 'var(--accent-red)'} />
+              <p style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)', fontFamily: "'Sora', sans-serif" }}>
                 {result.score}/{result.totalMarks}
               </p>
             </div>
-            <p className="text-xs text-surface-500">
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               {result.testId?.title || 'Test'} · Attempt #{result.attemptNumber || 1}
             </p>
 
             {/* Pass/Fail Badge */}
-            <span className={`inline-block mt-2 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-              passed ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-            }`}>
+            <span style={{
+              display: 'inline-block', marginTop: '8px', padding: '4px 16px', borderRadius: '9999px',
+              fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em',
+              background: passed ? 'var(--accent-green-bg)' : 'var(--accent-red-bg)',
+              color: passed ? 'var(--accent-green)' : 'var(--accent-red)'
+            }}>
               {passed ? '✓ Passed' : '✗ Failed'}
             </span>
           </div>
@@ -88,16 +97,18 @@ const ResultSummary = ({ result, showViolationBanner = true }) => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
         {stats.map((s, i) => {
           const Icon = s.icon;
           return (
-            <div key={i} className="bg-surface-900/60 border border-surface-800/50 rounded-xl p-4 text-center">
-              <div className={`w-9 h-9 ${s.bg} rounded-lg flex items-center justify-center mx-auto mb-2`}>
-                <Icon className={`w-4 h-4 ${s.color}`} />
+            <div key={i} className="stat-card" style={{
+              background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', textAlign: 'center', boxShadow: 'var(--shadow-sm)'
+            }}>
+              <div style={{ width: '36px', height: '36px', background: s.bg, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
+                <Icon size={20} color={s.color} />
               </div>
-              <p className="text-lg font-bold text-surface-100">{s.value}</p>
-              <p className="text-[10px] text-surface-500 uppercase tracking-wider mt-0.5">{s.label}</p>
+              <p style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', fontFamily: "'Sora', sans-serif" }}>{s.value}</p>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '2px' }}>{s.label}</p>
             </div>
           );
         })}
@@ -105,21 +116,31 @@ const ResultSummary = ({ result, showViolationBanner = true }) => {
 
       {/* Auto-submitted warning */}
       {showViolationBanner && result.autoSubmitted && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20">
-          <HiOutlineExclamationTriangle className="w-5 h-5 text-red-400 shrink-0" />
-          <p className="text-sm text-red-400 font-medium">
-            ⚠ This test was auto-submitted due to a security violation
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 20px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', marginBottom: '16px' }}>
+          <HiOutlineExclamationTriangle size={18} color="#ef4444" />
+          <div>
+            <p style={{ fontSize: '14px', fontWeight: '600', color: '#ef4444', marginBottom: '2px' }}>
+              Auto-submitted due to security violation
+            </p>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              This test was submitted automatically
+            </p>
+          </div>
         </div>
       )}
 
       {/* Violations count */}
       {showViolationBanner && (result.violations?.length > 0 || result.violationCount > 0) && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-          <HiOutlineShieldExclamation className="w-5 h-5 text-amber-400 shrink-0" />
-          <p className="text-sm text-amber-400 font-medium">
-            {result.violations?.length || result.violationCount} proctoring violation{(result.violations?.length || result.violationCount) !== 1 ? 's' : ''} recorded
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 20px', background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: '12px' }}>
+          <HiOutlineShieldExclamation size={18} color="#eab308" />
+          <div>
+            <p style={{ fontSize: '14px', fontWeight: '600', color: '#eab308', marginBottom: '2px' }}>
+              {result.violations?.length || result.violationCount} proctoring violation{(result.violations?.length || result.violationCount) !== 1 ? 's' : ''} recorded
+            </p>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              Some actions were flagged during the test
+            </p>
+          </div>
         </div>
       )}
     </div>
