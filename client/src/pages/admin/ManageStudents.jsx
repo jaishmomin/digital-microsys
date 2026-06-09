@@ -1,3 +1,4 @@
+import { useTheme } from '../../context/ThemeContext';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../services/api';
@@ -9,6 +10,7 @@ import {
 } from 'react-icons/hi2';
 
 const ManageStudents = () => {
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,90 +63,155 @@ const ManageStudents = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid var(--border-hover)', borderTopColor: 'var(--accent-amber)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-surface-100">Manage Students</h1>
-        <p className="text-surface-500 text-sm mt-1">{students.length} student{students.length !== 1 ? 's' : ''} registered</p>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: '28px'
+      }}>
+        <div>
+          <h1 style={{ fontSize: '26px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+            Manage Students
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '24px' }}>
+            {students.length} student{students.length !== 1 ? 's' : ''} registered
+          </p>
+        </div>
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
-        <HiOutlineMagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search by name or roll number..."
-          className="w-full pl-10 pr-4 py-2.5 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-200 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-amber-500/30 text-sm"
-        />
+      <div style={{ marginBottom: '24px', maxWidth: '400px' }}>
+        <div style={{ position: 'relative', width: '100%' }}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder="Search by name or roll number..."
+            style={{
+              width: '100%',
+              padding: '10px 16px 10px 42px',
+              background: 'var(--bg-hover)',
+              border: '1px solid var(--border-input)',
+              borderRadius: '10px',
+              color: 'var(--text-primary)',
+              fontSize: '14px',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
+          />
+          <span style={{
+            position: 'absolute',
+            left: '14px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: 'var(--text-muted)',
+            pointerEvents: 'none',
+            display: 'flex'
+          }}>
+            <HiOutlineMagnifyingGlass size={16} />
+          </span>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <div style={{
+        background: 'var(--bg-surface)',
+        borderRadius: '16px',
+        padding: '0',
+        overflow: 'hidden',
+        border: '1px solid var(--border-color)'
+      }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="border-b border-surface-800/50">
-                <th className="text-left px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">Name</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider hidden sm:table-cell">Email</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">Roll No</th>
-                <th className="text-center px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">Status</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider hidden md:table-cell">Joined</th>
-                <th className="text-center px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">Actions</th>
+              <tr style={{ background: 'var(--bg-hover)', borderBottom: '1px solid var(--border-color)' }}>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Name</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }} className="hidden sm:table-cell">Email</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Roll No</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Status</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }} className="hidden md:table-cell">Joined</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-800/30">
+            <tbody>
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-12 text-surface-600 text-sm">
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)', fontSize: '15px' }}>
                     {search ? 'No students match your search' : 'No students registered yet'}
                   </td>
                 </tr>
               ) : (
                 students.map((s) => (
-                  <tr key={s._id} className="hover:bg-surface-800/20 transition-colors cursor-pointer" onClick={() => navigate(`/admin/results?studentId=${s._id}`)}>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  <tr key={s._id} style={{ borderBottom: '1px solid var(--bg-hover)', transition: 'background 0.15s', cursor: 'pointer' }}
+                    onClick={() => navigate(`/admin/results?studentId=${s._id}`)}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '36px', height: '36px',
+                          borderRadius: '50%',
+                          background: 'var(--accent-blue)',
+                          display: 'flex', alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px', fontWeight: '600',
+                          color: 'var(--text-primary)', flexShrink: 0
+                        }}>
                           {s.name?.charAt(0)?.toUpperCase()}
                         </div>
-                        <span className="text-sm font-medium text-surface-200">{s.name}</span>
+                        <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{s.name}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 hidden sm:table-cell">
-                      <span className="text-sm text-surface-400">{s.email}</span>
+                    <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }} className="hidden sm:table-cell">
+                      <span style={{ color: 'var(--text-secondary)' }}>{s.email}</span>
                     </td>
-                    <td className="px-5 py-3.5">
-                      <span className="text-sm text-surface-300 font-mono">{s.rollNumber}</span>
+                    <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                      <span style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>{s.rollNumber}</span>
                     </td>
-                    <td className="px-5 py-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => openToggleModal(s)}
-                        className="cursor-pointer"
+                        style={{ cursor: 'pointer', background: 'none', border: 'none', margin: 0, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
                         title={s.isActive ? 'Click to disable' : 'Click to enable'}
                       >
-                        <div className="relative inline-block">
-                          <div className={`w-10 h-6 rounded-full transition-colors ${s.isActive ? 'bg-emerald-500' : 'bg-surface-700'}`} />
-                          <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${s.isActive ? 'translate-x-4' : ''}`} />
+                        <div style={{ position: 'relative', width: '40px', height: '24px' }}>
+                          <div style={{
+                            width: '40px', height: '24px', borderRadius: '24px',
+                            background: s.isActive ? 'var(--accent-green)' : 'var(--border-input)',
+                            transition: '0.2s'
+                          }} />
+                          <div style={{
+                            position: 'absolute', top: '2px', left: s.isActive ? '18px' : '2px',
+                            width: '20px', height: '20px', background: 'var(--text-primary)', borderRadius: '50%',
+                            transition: '0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                          }} />
                         </div>
                       </button>
                     </td>
-                    <td className="px-5 py-3.5 hidden md:table-cell">
-                      <span className="text-xs text-surface-500">{formatDate(s.createdAt)}</span>
+                    <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }} className="hidden md:table-cell">
+                      <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{formatDate(s.createdAt)}</span>
                     </td>
-                    <td className="px-5 py-3.5 text-center" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={() => navigate(`/admin/results?studentId=${s._id}`)} title="View Results"
-                        className="p-2 rounded-lg hover:bg-surface-700/50 text-surface-400 hover:text-amber-400 transition-colors cursor-pointer">
-                        <HiOutlineChartBarSquare className="w-4 h-4" />
-                      </button>
+                    <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <button onClick={() => navigate(`/admin/results?studentId=${s._id}`)} title="View Results"
+                          style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-input)'; e.currentTarget.style.color = 'var(--accent-amber)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                        >
+                          <HiOutlineChartBarSquare size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

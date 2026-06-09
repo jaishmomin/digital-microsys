@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 import {
   HiOutlineHome,
   HiOutlineClipboardDocumentList,
@@ -9,8 +10,6 @@ import {
   HiOutlineArrowRightOnRectangle,
   HiOutlineBars3,
   HiOutlineXMark,
-  HiOutlineAcademicCap,
-  HiOutlineShieldCheck,
 } from 'react-icons/hi2';
 
 const DashboardLayout = () => {
@@ -26,15 +25,13 @@ const DashboardLayout = () => {
     navigate(isAdmin ? '/admin/login' : '/login');
   };
 
-  // Admin navigation
   const adminNav = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: HiOutlineHome },
     { path: '/admin/tests', label: 'Manage Tests', icon: HiOutlineClipboardDocumentList },
-    { path: '/admin/students', label: 'Manage Students', icon: HiOutlineUsers },
-    { path: '/admin/results', label: 'View Results', icon: HiOutlineChartBarSquare },
+    { path: '/admin/students', label: 'Students', icon: HiOutlineUsers },
+    { path: '/admin/results', label: 'Results', icon: HiOutlineChartBarSquare },
   ];
 
-  // Student navigation
   const studentNav = [
     { path: '/student/dashboard', label: 'Dashboard', icon: HiOutlineHome },
     { path: '/student/results', label: 'My Results', icon: HiOutlineChartBarSquare },
@@ -49,137 +46,179 @@ const DashboardLayout = () => {
     return location.pathname === path;
   };
 
-  // Admin accent = amber, Student accent = primary
-  const accentRing = isAdmin ? 'focus:ring-amber-500/50' : 'focus:ring-primary-500/50';
-  const brandGradient = isAdmin
-    ? 'from-amber-500 to-amber-700'
-    : 'from-primary-500 to-primary-700';
-  const brandShadow = isAdmin
-    ? 'shadow-amber-500/20'
-    : 'shadow-primary-500/20';
-  const activeClass = isAdmin
-    ? 'bg-amber-500/15 text-amber-400'
-    : 'bg-primary-500/15 text-primary-400';
-  const activeDot = isAdmin ? 'bg-amber-400' : 'bg-primary-400';
-  const activeIcon = isAdmin
-    ? 'text-amber-400'
-    : 'text-primary-400';
+  const accentColor = isAdmin ? 'var(--accent-amber)' : 'var(--accent-blue)';
+  const accentBg = isAdmin ? 'var(--accent-amber-bg)' : 'var(--accent-blue-bg)';
 
   return (
-    <div className="min-h-screen bg-surface-950 flex">
-      {/* Sidebar Overlay (Mobile) */}
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+      {/* Overlay for mobile */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40 }}
+          className="lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-[280px] bg-surface-900/80 backdrop-blur-xl border-r border-surface-800/50 flex flex-col transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+      <div
+        className={`lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{
+          width: '240px',
+          minWidth: '240px',
+          flexShrink: 0,
+          background: 'var(--bg-sidebar)',
+          borderRight: '1px solid var(--border-color)',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'fixed',
+          top: 0, left: 0,
+          height: '100vh',
+          zIndex: 50,
+          transition: 'transform 0.3s'
+        }}
       >
-        {/* Brand */}
-        <div className="h-16 flex items-center gap-3 px-6 border-b border-surface-800/50">
-          <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${brandGradient} flex items-center justify-center shadow-lg ${brandShadow}`}>
-            {isAdmin ? (
-              <HiOutlineShieldCheck className="w-5 h-5 text-white" />
-            ) : (
-              <HiOutlineAcademicCap className="w-5 h-5 text-white" />
-            )}
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-surface-100 tracking-tight">Digital Microsys</h1>
-            <p className="text-[10px] text-surface-500 uppercase tracking-widest">
-              {isAdmin ? 'Admin Panel' : 'Test Management'}
-            </p>
-          </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="ml-auto lg:hidden text-surface-400 hover:text-surface-200 transition-colors"
-          >
-            <HiOutlineXMark className="w-5 h-5" />
+        {/* Logo */}
+        <div style={{
+          height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 20px', borderBottom: '1px solid var(--border-color)',
+        }}>
+          <span style={{ fontFamily: "'Sora', sans-serif", fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
+            Digital<span style={{ color: 'var(--accent-blue)' }}>Microsys</span>
+          </span>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden"
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+            <HiOutlineXMark size={20} />
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        {/* Nav items */}
+        <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                  active
-                    ? `${activeClass} shadow-sm`
-                    : 'text-surface-400 hover:bg-surface-800/60 hover:text-surface-200'
-                }`}
+              <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  padding: '10px 16px', borderRadius: '8px', cursor: 'pointer',
+                  marginBottom: '4px', textDecoration: 'none',
+                  color: active ? accentColor : 'var(--text-secondary)',
+                  background: active ? accentBg : 'transparent',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-label)'; } }}
+                onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; } }}
               >
-                <Icon className={`w-5 h-5 transition-colors ${active ? activeIcon : 'text-surface-500 group-hover:text-surface-300'}`} />
-                {item.label}
-                {active && (
-                  <div className={`ml-auto w-1.5 h-1.5 rounded-full ${activeDot}`} />
-                )}
+                <Icon size={18} />
+                <span style={{ fontSize: '14px', fontWeight: '500' }}>
+                  {item.label}
+                </span>
               </Link>
             );
           })}
         </nav>
 
-        {/* User section */}
-        <div className="p-4 border-t border-surface-800/50">
-          <div className="flex items-center gap-3 px-2 mb-3">
-            <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${brandGradient} flex items-center justify-center text-white text-sm font-bold shadow-md`}>
+        {/* User info */}
+        <div style={{
+          padding: '16px',
+          borderTop: '1px solid var(--border-color)',
+          marginTop: 'auto'
+        }}>
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            gap: '10px', marginBottom: '12px'
+          }}>
+            <div style={{
+              width: '36px', height: '36px',
+              borderRadius: '50%',
+              background: accentColor,
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px', fontWeight: '700',
+              flexShrink: 0,
+              color: '#fff'
+            }}>
               {user?.name?.charAt(0)?.toUpperCase() || 'U'}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-surface-200 truncate">{user?.name}</p>
-              <p className="text-xs text-surface-500 capitalize">{user?.role}</p>
+            <div style={{ minWidth: 0 }}>
+              <p style={{
+                fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+              }}>
+                {user?.name}
+              </p>
+              <span style={{
+                fontSize: '11px',
+                background: accentBg,
+                color: accentColor,
+                padding: '1px 8px',
+                borderRadius: '4px',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                display: 'inline-block',
+                marginTop: '2px'
+              }}>
+                {user?.role}
+              </span>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all duration-200 cursor-pointer"
-          >
-            <HiOutlineArrowRightOnRectangle className="w-4 h-4" />
+          <button onClick={handleLogout} style={{
+            display: 'flex', alignItems: 'center',
+            gap: '8px', color: 'var(--accent-red)',
+            background: 'none', border: 'none',
+            cursor: 'pointer', fontSize: '13px',
+            padding: '4px 0', width: '100%'
+          }}>
+            <HiOutlineArrowRightOnRectangle size={15} />
             Sign Out
           </button>
         </div>
-      </aside>
+      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        <header className="h-16 bg-surface-900/50 backdrop-blur-lg border-b border-surface-800/50 flex items-center px-4 lg:px-8 sticky top-0 z-30">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-surface-400 hover:text-surface-200 transition-colors mr-4"
-          >
-            <HiOutlineBars3 className="w-6 h-6" />
-          </button>
-          <div className="flex-1" />
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-surface-500 hidden sm:block">
+      {/* Main */}
+      <div className="lg:ml-[240px]" style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+        minHeight: '100vh',
+        marginLeft: window.innerWidth >= 1024 ? '240px' : 0
+      }}>
+        {/* Top bar */}
+        <div style={{
+          height: '60px',
+          background: 'var(--bg-primary)',
+          borderBottom: '1px solid var(--border-color)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 32px',
+          position: 'sticky',
+          top: 0,
+          zIndex: 40
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden"
+              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginRight: '16px' }}>
+              <HiOutlineBars3 size={22} />
+            </button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <ThemeToggle />
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }} className="hidden sm:block">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
-            <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-              isAdmin ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
-            }`}>
-              {user?.role}
-            </div>
           </div>
-        </header>
+        </div>
 
-        {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
+        {/* Page content */}
+        <div style={{
+          flex: 1,
+          padding: '32px 40px',
+          overflowY: 'auto'
+        }}>
           <div className="animate-fade-in">
             <Outlet />
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );

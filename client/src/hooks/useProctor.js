@@ -1,148 +1,175 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-/**
- * Anti-cheat / proctoring hook for TakeTest.
- *
- * @param {object} options
- * @param {boolean} options.active - Whether proctoring is active
- * @param {function} options.onViolation - Callback receiving {type, timestamp}
- * @param {function} options.onAutoSubmit - Callback to auto-submit the test
- */
-const useProctor = ({ active, onViolation, onAutoSubmit }) => {
-  const autoSubmittedRef = useRef(false);
-  const onViolationRef = useRef(onViolation);
-  const onAutoSubmitRef = useRef(onAutoSubmit);
+const useProctor = (isActive, onViolation) => {
+  const submittedRef = useRef(false);
+  const activeRef = useRef(false);
+  const graceRef = useRef(true);
+  const listenersRef = useRef(false);
 
-  // Keep refs fresh
+  // Keep activeRef in sync
   useEffect(() => {
-    onViolationRef.current = onViolation;
-    onAutoSubmitRef.current = onAutoSubmit;
-  }, [onViolation, onAutoSubmit]);
+    activeRef.current = isActive;
+    console.log('Proctor active:', isActive);
+  }, [isActive]);
 
-  const recordAndSubmit = useCallback((type) => {
-    if (autoSubmittedRef.current) return;
+  const fireViolation = useCallback((type) => {
+    console.log('fireViolation called:', type, {
+      submitted: submittedRef.current,
+      active: activeRef.current,
+      grace: graceRef.current
+    });
 
-    const violation = { type, timestamp: new Date().toISOString() };
-    onViolationRef.current?.(violation);
+    if (submittedRef.current) {
+      console.log('Already submitted, skip');
+      return;
+    }
+    if (!activeRef.current) {
+      console.log('Test not active, skip');
+      return;
+    }
+    if (graceRef.current) {
+      console.log('In grace period, skip');
+      return;
+    }
 
-    // Auto-submit on violation
-    autoSubmittedRef.current = true;
-    setTimeout(() => {
-      onAutoSubmitRef.current?.();
-    }, 100);
-  }, []);
+    submittedRef.current = true;
+    console.log('VIOLATION FIRING:', type);
+    onViolation(type);
+  }, [onViolation]);
 
   useEffect(() => {
-    if (!active) return;
+    if (!isActive) {
+      console.log('Proctor: test not active');
+      return;
+    }
 
-    // ─── a) Fullscreen Enforcement ───
-    const requestFullscreen = async () => {
+    console.log('Proctor: setting up listeners');
+    
+    // Grace period: 3 seconds
+    graceRef.current = true;
+    submittedRef.current = false;
+    
+    const graceTimer = setTimeout(() => {
+      graceRef.current = false;
+      console.log('Proctor: grace period ended');
+    }, 3000);
+
+    // Request fullscreen after 1 second
+    const fsTimer = setTimeout(async () => {
       try {
-        const el = document.documentElement;
-        if (el.requestFullscreen) await el.requestFullscreen();
-        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-        else if (el.msRequestFullscreen) await el.msRequestFullscreen();
-      } catch {
-        // Fullscreen may be blocked by browser
-      }
-    };
-
-    requestFullscreen();
-
-    const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        recordAndSubmit('fullscreenExit');
-      }
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-
-    // ─── b) Tab Switch Detection ───
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        recordAndSubmit('tabSwitch');
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // ─── c) Window Blur Detection ───
-    const handleBlur = () => {
-      recordAndSubmit('blur');
-    };
-    window.addEventListener('blur', handleBlur);
-
-    // ─── d) Keyboard Shortcut Blocking ───
-    const handleKeydown = (e) => {
-      // F5 — refresh
-      if (e.key === 'F5') {
-        e.preventDefault();
-        recordAndSubmit('refresh');
-        return;
-      }
-
-      // Ctrl/Cmd combos
-      if (e.ctrlKey || e.metaKey) {
-        const blocked = ['r', 't', 'w', 'n', 'f', 'c', 'a', 'p', 's'];
-        if (blocked.includes(e.key.toLowerCase())) {
-          e.preventDefault();
-          if (['r'].includes(e.key.toLowerCase())) {
-            recordAndSubmit('refresh');
-          } else if (['c', 'a'].includes(e.key.toLowerCase())) {
-            recordAndSubmit('copyAttempt');
-          }
-          return;
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+          console.log('Fullscreen activated');
         }
+      } catch(e) {
+        console.log('Fullscreen failed:', e);
       }
+    }, 1000);
 
-      // Alt+F4
-      if (e.altKey && e.key === 'F4') {
-        e.preventDefault();
-        recordAndSubmit('altF4');
-        return;
-      }
-
-      // Alt+Tab
-      if (e.altKey && e.key === 'Tab') {
-        e.preventDefault();
-        recordAndSubmit('altTab');
-        return;
+    // ── Fullscreen exit ──
+    const onFSChange = () => {
+      console.log('Fullscreen changed:', !!document.fullscreenElement);
+      if (!document.fullscreenElement) {
+        fireViolation('fullscreen-exit');
       }
     };
-    document.addEventListener('keydown', handleKeydown, true);
 
-    // ─── e) Right-click blocking ───
-    const handleContextMenu = (e) => {
+    // ── Tab switch ──
+    const onVisChange = () => {
+      console.log('VISIBILITY CHANGE:', {
+        hidden: document.hidden,
+        state: document.visibilityState,
+        active: activeRef.current,
+        grace: graceRef.current,
+        submitted: submittedRef.current
+      });
+      if (document.hidden) {
+        fireViolation('tab-switch');
+      }
+    };
+
+    // ── Window blur ──
+    // Use timeout to avoid fullscreen transition false positives
+    let blurTimer = null;
+    const onBlur = () => {
+      console.log('WINDOW BLUR:', {
+        active: activeRef.current,
+        grace: graceRef.current
+      });
+      blurTimer = setTimeout(() => {
+        // Only fire if window still not focused
+        if (document.visibilityState !== 'hidden') {
+          fireViolation('window-blur');
+        }
+      }, 1000);
+    };
+
+    const onFocus = () => {
+      console.log('Window focus');
+      if (blurTimer) {
+        clearTimeout(blurTimer);
+        blurTimer = null;
+      }
+    };
+
+    // ── Keyboard shortcuts ──
+    const onKeyDown = (e) => {
+      const block = (
+        e.key === 'F5' ||
+        (e.ctrlKey && ['r','R','t','T','w','W','n','N','f','F','c','a'].includes(e.key)) ||
+        (e.altKey && ['F4','Tab'].includes(e.key))
+      );
+      if (block) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Blocked key:', e.key);
+      }
+    };
+
+    // ── Right click ──
+    const onContext = (e) => {
       e.preventDefault();
     };
-    document.addEventListener('contextmenu', handleContextMenu);
 
-    // ─── f) beforeunload warning ───
-    const handleBeforeUnload = (e) => {
+    // ── Before unload ──
+    const onBeforeUnload = (e) => {
       e.preventDefault();
-      e.returnValue = '';
+      e.returnValue = 'Test in progress. Sure you want to leave?';
+      return e.returnValue;
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
 
-    // ─── Cleanup ───
+    // Attach all listeners
+    document.addEventListener('fullscreenchange', onFSChange);
+    document.addEventListener('visibilitychange', onVisChange);
+    window.addEventListener('blur', onBlur);
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('contextmenu', onContext);
+    window.addEventListener('beforeunload', onBeforeUnload);
+
+    listenersRef.current = true;
+    console.log('Proctor: all listeners attached');
+
+    // Cleanup
     return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleBlur);
-      document.removeEventListener('keydown', handleKeydown, true);
-      document.removeEventListener('contextmenu', handleContextMenu);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      console.log('Proctor: cleanup');
+      clearTimeout(graceTimer);
+      clearTimeout(fsTimer);
+      if (blurTimer) clearTimeout(blurTimer);
 
-      // Exit fullscreen on cleanup
+      document.removeEventListener('fullscreenchange', onFSChange);
+      document.removeEventListener('visibilitychange', onVisChange);
+      window.removeEventListener('blur', onBlur);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('contextmenu', onContext);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+
       if (document.fullscreenElement) {
-        document.exitFullscreen?.().catch(() => {});
+        document.exitFullscreen().catch(() => {});
       }
     };
-  }, [active, recordAndSubmit]);
-
-  return {
-    isAutoSubmitted: autoSubmittedRef.current,
-  };
+  }, [isActive, fireViolation]);
 };
 
 export default useProctor;

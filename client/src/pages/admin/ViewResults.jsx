@@ -1,10 +1,10 @@
+import { useTheme } from '../../context/ThemeContext';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import API from '../../services/api';
 import toast from 'react-hot-toast';
 import {
   HiOutlineArrowDownTray,
-  HiOutlineFunnel,
   HiOutlineExclamationTriangle,
   HiOutlineChartBarSquare,
   HiOutlineTrophy,
@@ -26,6 +26,7 @@ const downloadBlob = (data, filename) => {
 };
 
 const ViewResults = () => {
+  const { theme } = useTheme();
   const [searchParams] = useSearchParams();
   const preTestId = searchParams.get('testId') || '';
 
@@ -36,7 +37,7 @@ const ViewResults = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [bulkExporting, setBulkExporting] = useState(false);
-  const [rowExporting, setRowExporting] = useState(null); // resultId of row being exported
+  const [rowExporting, setRowExporting] = useState(null);
 
   useEffect(() => { fetchTests(); }, []);
   useEffect(() => { if (selectedTest) fetchResults(selectedTest); }, [selectedTest]);
@@ -100,33 +101,54 @@ const ViewResults = () => {
 
   if (initialLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid var(--border-hover)', borderTopColor: 'var(--accent-amber)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: '28px'
+      }}>
         <div>
-          <h1 className="text-2xl font-bold text-surface-100">View Results</h1>
-          <p className="text-surface-500 text-sm mt-1">
+          <h1 style={{ fontSize: '26px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+            View Results
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '24px' }}>
             {testInfo ? `${testInfo.title} — ${results.length} submissions` : 'Select a test to view results'}
           </p>
         </div>
         {selectedTest && results.length > 0 && (
           <button onClick={handleExportPDF} disabled={bulkExporting}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-amber-500/25 text-sm w-fit disabled:opacity-50 cursor-pointer">
+            style={{
+              background: 'var(--accent-blue-bg)',
+              border: '1px solid var(--accent-blue-border)',
+              color: 'var(--accent-blue)',
+              borderRadius: '10px',
+              padding: '10px 18px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: bulkExporting ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              opacity: bulkExporting ? 0.7 : 1
+            }}>
             {bulkExporting ? (
-              <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', border: '2px solid var(--accent-blue-border)', borderTopColor: 'var(--accent-blue)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                 Exporting...
               </span>
             ) : (
               <>
-                <HiOutlineArrowDownTray className="w-4 h-4" /> Export All PDF
+                <HiOutlineArrowDownTray size={16} /> Export All PDF
               </>
             )}
           </button>
@@ -134,37 +156,57 @@ const ViewResults = () => {
       </div>
 
       {/* Test Filter */}
-      <div className="flex items-center gap-3">
-        <HiOutlineFunnel className="w-4 h-4 text-surface-500" />
+      <div style={{ marginBottom: '28px' }}>
+        <label style={{
+          display: 'block', fontSize: '13px',
+          color: 'var(--text-secondary)',
+          marginBottom: '8px'
+        }}>
+          Filter by Test
+        </label>
         <select value={selectedTest} onChange={(e) => setSelectedTest(e.target.value)}
-          className="px-4 py-2.5 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 text-sm min-w-[250px]">
-          <option value="">Select a test...</option>
+          style={{
+            background: 'var(--bg-hover)',
+            border: '1px solid var(--border-input)',
+            borderRadius: '10px',
+            padding: '11px 16px',
+            color: 'var(--text-primary)',
+            fontSize: '14px',
+            minWidth: '280px',
+            cursor: 'pointer',
+            outline: 'none',
+            appearance: 'auto'
+          }}>
+          <option value="" style={{ background: 'var(--bg-sidebar)' }}>Select a test...</option>
           {tests.map((t) => (
-            <option key={t._id} value={t._id}>{t.title} ({t.subject})</option>
+            <option key={t._id} value={t._id} style={{ background: 'var(--bg-sidebar)' }}>{t.title} ({t.subject})</option>
           ))}
         </select>
       </div>
 
       {/* Stats Bar */}
       {selectedTest && results.length > 0 && !loading && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '28px' }}>
           {[
-            { label: 'Total', value: results.length, icon: HiOutlineUserGroup, color: 'text-blue-400', bg: 'bg-blue-500/15' },
-            { label: 'Highest', value: `${highest}%`, icon: HiOutlineArrowTrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-            { label: 'Lowest', value: `${lowest}%`, icon: HiOutlineArrowTrendingDown, color: 'text-red-400', bg: 'bg-red-500/15' },
-            { label: 'Average', value: `${average}%`, icon: HiOutlineChartBarSquare, color: 'text-amber-400', bg: 'bg-amber-500/15' },
-            { label: 'Passed', value: passCount, icon: HiOutlineTrophy, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-            { label: 'Failed', value: failCount, icon: HiOutlineExclamationTriangle, color: 'text-red-400', bg: 'bg-red-500/15' },
+            { label: 'Total', value: results.length, icon: HiOutlineUserGroup, color: 'var(--accent-blue)', bg: 'var(--accent-blue-bg)' },
+            { label: 'Highest', value: `${highest}%`, icon: HiOutlineArrowTrendingUp, color: 'var(--accent-green)', bg: 'var(--accent-green-bg)' },
+            { label: 'Lowest', value: `${lowest}%`, icon: HiOutlineArrowTrendingDown, color: 'var(--accent-red)', bg: 'var(--accent-red-bg)' },
+            { label: 'Average', value: `${average}%`, icon: HiOutlineChartBarSquare, color: 'var(--accent-amber)', bg: 'var(--accent-amber-bg)' },
+            { label: 'Passed', value: passCount, icon: HiOutlineTrophy, color: 'var(--accent-green)', bg: 'var(--accent-green-bg)' },
+            { label: 'Failed', value: failCount, icon: HiOutlineExclamationTriangle, color: 'var(--accent-red)', bg: 'var(--accent-red-bg)' },
           ].map((s, i) => {
             const Icon = s.icon;
             return (
-              <div key={i} className="bg-surface-900/60 border border-surface-800/50 rounded-xl p-3 flex items-center gap-3">
-                <div className={`w-8 h-8 ${s.bg} rounded-lg flex items-center justify-center shrink-0`}>
-                  <Icon className={`w-4 h-4 ${s.color}`} />
+              <div key={i} style={{
+                background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+                borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px'
+              }}>
+                <div style={{ width: '32px', height: '32px', background: s.bg, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon size={16} style={{ color: s.color }} />
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-surface-100 leading-tight">{s.value}</p>
-                  <p className="text-[10px] text-surface-500 uppercase tracking-wider">{s.label}</p>
+                  <p style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', lineHeight: '1.2' }}>{s.value}</p>
+                  <p style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</p>
                 </div>
               </div>
             );
@@ -174,95 +216,143 @@ const ViewResults = () => {
 
       {/* Results Table */}
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
+          <div style={{ width: '32px', height: '32px', border: '3px solid var(--border-hover)', borderTopColor: 'var(--accent-amber)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         </div>
       ) : !selectedTest ? (
-        <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-12 text-center">
-          <HiOutlineFunnel className="w-10 h-10 text-surface-600 mx-auto mb-3" />
-          <p className="text-surface-400 text-sm">Select a test from the dropdown above to view results</p>
+        <div style={{
+          textAlign: 'center',
+          padding: '80px 20px',
+          color: 'var(--text-muted)',
+          background: 'var(--bg-surface)',
+          borderRadius: '16px',
+          border: '1px solid var(--border-color)'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+            📊
+          </div>
+          <p style={{ fontSize: '16px', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+            No test selected
+          </p>
+          <p style={{ fontSize: '13px' }}>
+            Select a test from the dropdown above to view student results
+          </p>
         </div>
       ) : results.length === 0 ? (
-        <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-12 text-center">
-          <p className="text-surface-400 text-sm">No submissions found for this test</p>
+        <div style={{
+          textAlign: 'center',
+          padding: '80px 20px',
+          color: 'var(--text-muted)',
+          background: 'var(--bg-surface)',
+          borderRadius: '16px',
+          border: '1px solid var(--border-color)'
+        }}>
+          <p style={{ fontSize: '15px' }}>No submissions found for this test</p>
         </div>
       ) : (
-        <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <div style={{
+          background: 'var(--bg-surface)',
+          borderRadius: '16px',
+          padding: '0',
+          overflow: 'hidden',
+          border: '1px solid var(--border-color)'
+        }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="border-b border-surface-800/50">
-                  <th className="text-center px-4 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider w-12">#</th>
-                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">Student</th>
-                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider hidden sm:table-cell">Roll No</th>
-                  <th className="text-center px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">Score</th>
-                  <th className="text-center px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">%</th>
-                  <th className="text-center px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider hidden md:table-cell">Time</th>
-                  <th className="text-center px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider hidden lg:table-cell">Flags</th>
-                  <th className="text-center px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">PDF</th>
+                <tr style={{ background: 'var(--bg-hover)', borderBottom: '1px solid var(--border-color)' }}>
+                  <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: '48px' }}>#</th>
+                  <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Student</th>
+                  <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }} className="hidden sm:table-cell">Roll No</th>
+                  <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Score</th>
+                  <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>%</th>
+                  <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }} className="hidden md:table-cell">Time</th>
+                  <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }} className="hidden lg:table-cell">Flags</th>
+                  <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>PDF</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-800/30">
+              <tbody>
                 {results.map((r, idx) => {
                   const pass = (r.percentage || 0) >= passingPct;
                   const isExporting = rowExporting === r._id;
                   return (
-                    <tr key={r._id} className="hover:bg-surface-800/20 transition-colors">
-                      <td className="px-4 py-3.5 text-center">
-                        <span className="text-xs font-bold text-surface-500">{idx + 1}</span>
+                    <tr key={r._id} style={{ borderBottom: '1px solid var(--bg-hover)', transition: 'background 0.15s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>{idx + 1}</span>
                       </td>
-                      <td className="px-5 py-3.5">
-                        <p className="text-sm font-medium text-surface-200">{r.studentId?.name || 'N/A'}</p>
-                        <p className="text-xs text-surface-500 sm:hidden">{r.studentId?.rollNumber}</p>
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                        <p style={{ fontWeight: '500', color: 'var(--text-primary)', marginBottom: '4px' }}>{r.studentId?.name || 'N/A'}</p>
+                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }} className="sm:hidden">{r.studentId?.rollNumber}</p>
                       </td>
-                      <td className="px-5 py-3.5 hidden sm:table-cell">
-                        <span className="text-sm text-surface-400 font-mono">{r.studentId?.rollNumber || '—'}</span>
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }} className="hidden sm:table-cell">
+                        <span style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>{r.studentId?.rollNumber || '—'}</span>
                       </td>
-                      <td className="px-5 py-3.5 text-center">
-                        <span className={`text-sm font-bold ${pass ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }}>
+                        <span style={{ fontWeight: '700', color: pass ? 'var(--accent-green)' : 'var(--accent-red)' }}>
                           {r.score}/{r.totalMarks}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5 text-center">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold ${
-                          pass ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                        }`}>
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block', padding: '2px 8px', borderRadius: '20px',
+                          fontSize: '12px', fontWeight: '700',
+                          background: pass ? 'var(--accent-green-bg)' : 'var(--accent-red-bg)',
+                          color: pass ? 'var(--accent-green)' : 'var(--accent-red)'
+                        }}>
                           {r.percentage}%
                         </span>
                       </td>
-                      <td className="px-5 py-3.5 text-center hidden md:table-cell">
-                        <span className="text-xs text-surface-400">{formatTime(r.timeTaken)}</span>
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }} className="hidden md:table-cell">
+                        <span style={{ color: 'var(--text-secondary)' }}>{formatTime(r.timeTaken)}</span>
                       </td>
-                      <td className="px-5 py-3.5 text-center hidden lg:table-cell">
-                        <div className="flex items-center justify-center gap-2">
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }} className="hidden lg:table-cell">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                           {r.autoSubmitted && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-bold">
-                              <HiOutlineExclamationTriangle className="w-3 h-3" /> AUTO
+                            <span style={{
+                              display: 'flex', alignItems: 'center', gap: '4px',
+                              background: 'var(--accent-red-bg)', color: 'var(--accent-red)',
+                              border: '1px solid var(--accent-red-bg)', borderRadius: '20px',
+                              padding: '2px 10px', fontSize: '11px', fontWeight: '700'
+                            }}>
+                              AUTO
                             </span>
                           )}
                           {r.violationCount > 0 && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[10px] font-bold">
+                            <span style={{
+                              background: 'var(--accent-amber-bg)', color: 'var(--accent-amber)',
+                              borderRadius: '20px', padding: '2px 8px', fontSize: '10px', fontWeight: '700'
+                            }}>
                               {r.violationCount} violations
                             </span>
                           )}
                           {!r.autoSubmitted && !r.violationCount && (
-                            <span className="text-xs text-surface-600">—</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>—</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-center">
-                        <button
-                          onClick={() => handleExportSinglePDF(r._id, r.studentId?.rollNumber)}
-                          disabled={isExporting}
-                          className="p-2 rounded-lg hover:bg-surface-700/50 text-surface-400 hover:text-amber-400 transition-colors cursor-pointer disabled:opacity-40"
-                          title="Download PDF"
-                        >
-                          {isExporting ? (
-                            <div className="w-4 h-4 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
-                          ) : (
-                            <HiOutlineArrowDownTray className="w-4 h-4" />
-                          )}
-                        </button>
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <button
+                            onClick={() => handleExportSinglePDF(r._id, r.studentId?.rollNumber)}
+                            disabled={isExporting}
+                            style={{
+                              background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px',
+                              cursor: isExporting ? 'not-allowed' : 'pointer', color: 'var(--text-secondary)', display: 'flex', opacity: isExporting ? 0.5 : 1
+                            }}
+                            title="Download PDF"
+                            onMouseEnter={(e) => { if (!isExporting) { e.currentTarget.style.background = 'var(--border-input)'; e.currentTarget.style.color = 'var(--accent-amber)'; } }}
+                            onMouseLeave={(e) => { if (!isExporting) { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; } }}
+                          >
+                            {isExporting ? (
+                              <div style={{ width: '16px', height: '16px', border: '2px solid var(--border-hover)', borderTopColor: 'var(--accent-amber)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                            ) : (
+                              <HiOutlineArrowDownTray size={16} />
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

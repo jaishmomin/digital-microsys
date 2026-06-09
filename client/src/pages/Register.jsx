@@ -1,45 +1,38 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import toast from 'react-hot-toast';
-import {
-  HiOutlineUser,
-  HiOutlineEnvelope,
-  HiOutlineLockClosed,
-  HiOutlineEye,
-  HiOutlineEyeSlash,
-  HiOutlineAcademicCap,
-  HiOutlineIdentification,
-} from 'react-icons/hi2';
+import { HiOutlineEye, HiOutlineEyeSlash } from 'react-icons/hi2';
 
 const Register = () => {
+  const { theme } = useTheme();
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    rollNumber: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({ name: '', rollNumber: '', email: '', password: '', confirmPassword: '' });
+  const [showPw, setShowPw] = useState(false);
+  const [showCPw, setShowCPw] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const [fName, setFName] = useState(false);
+  const [fRoll, setFRoll] = useState(false);
+  const [fEmail, setFEmail] = useState(false);
+  const [fPw, setFPw] = useState(false);
+  const [fCPw, setFCPw] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.password !== form.confirmPassword) {
-      return toast.error('Passwords do not match');
+    if (!form.name || !form.rollNumber || !form.email || !form.password) {
+      return toast.error('Please fill all fields');
     }
+    if (form.password.length < 8) return toast.error('Password must be at least 8 characters');
+    if (form.password !== form.confirmPassword) return toast.error('Passwords do not match');
+
     setLoading(true);
     try {
-      await register({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        rollNumber: form.rollNumber,
-      });
-      toast.success('Account created successfully!');
-      navigate('/dashboard');
+      await register({ name: form.name, rollNumber: form.rollNumber, email: form.email, password: form.password });
+      toast.success('Account created!');
+      navigate('/student/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');
     } finally {
@@ -47,144 +40,118 @@ const Register = () => {
     }
   };
 
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  const inputStyle = (focused) => ({
+    width: '100%',
+    padding: '13px 16px',
+    background: theme === 'light' ? '#f8faff' : 'rgba(255,255,255,0.05)',
+    border: focused 
+      ? '1.5px solid var(--accent-blue)' 
+      : (theme === 'light' ? '1.5px solid #cbd5e1' : '1px solid rgba(255,255,255,0.12)'),
+    borderRadius: '10px',
+    color: theme === 'light' ? '#0f172a' : '#ffffff',
+    fontSize: '14px',
+    outline: 'none',
+    boxSizing: 'border-box',
+    fontFamily: 'inherit',
+    transition: 'all 0.2s ease'
+  });
+
+  const labelStyle = {
+    color: theme === 'light' ? '#374151' : 'var(--text-label)',
+    fontSize: '13px',
+    fontWeight: '600',
+    marginBottom: '8px',
+    display: 'block'
+  };
+
   return (
-    <div className="min-h-screen bg-surface-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-80 h-80 bg-primary-600/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-primary-400/10 rounded-full blur-3xl" />
-      </div>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div className="animate-fade-in" style={{
+        background: theme === 'light' ? '#ffffff' : 'var(--bg-surface)',
+        border: theme === 'light' ? '1px solid #e2e8f0' : '1px solid var(--border-color)',
+        borderRadius: 20, padding: 40, width: '100%', maxWidth: 420,
+        boxShadow: theme === 'light' ? '0 8px 40px rgba(0,0,0,0.10)' : 'none'
+      }}>
+        {/* Icon */}
+        <div style={{
+          width: 56, height: 56, borderRadius: 14, background: 'var(--accent-blue)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 20px', fontSize: 24,
+        }}>✏️</div>
 
-      <div className="w-full max-w-md relative animate-fade-in">
-        {/* Logo & Title */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/30 animate-pulse-glow">
-            <HiOutlineAcademicCap className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-surface-100">Student Registration</h1>
-          <p className="text-surface-500 mt-1 text-sm">Join Digital Microsys</p>
-        </div>
+        <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 700, textAlign: 'center', color: 'var(--text-primary)', marginBottom: 6 }}>
+          Create Account
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 28 }}>
+          Register as a student on Digital Microsys
+        </p>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-8 shadow-2xl">
-          <div className="space-y-4">
-            {/* Name */}
-            <div>
-              <label htmlFor="register-name" className="block text-sm font-medium text-surface-300 mb-1.5">Full Name</label>
-              <div className="relative">
-                <HiOutlineUser className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-500" />
-                <input
-                  id="register-name"
-                  type="text"
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all text-sm"
-                  placeholder="John Doe"
-                />
-              </div>
-            </div>
-
-            {/* Roll Number */}
-            <div>
-              <label htmlFor="register-roll" className="block text-sm font-medium text-surface-300 mb-1.5">Roll Number</label>
-              <div className="relative">
-                <HiOutlineIdentification className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-500" />
-                <input
-                  id="register-roll"
-                  type="text"
-                  required
-                  value={form.rollNumber}
-                  onChange={(e) => setForm({ ...form, rollNumber: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all text-sm"
-                  placeholder="e.g. 2024CS001"
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="register-email" className="block text-sm font-medium text-surface-300 mb-1.5">Email Address</label>
-              <div className="relative">
-                <HiOutlineEnvelope className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-500" />
-                <input
-                  id="register-email"
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all text-sm"
-                  placeholder="you@example.com"
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <label htmlFor="register-password" className="block text-sm font-medium text-surface-300 mb-1.5">Password</label>
-              <div className="relative">
-                <HiOutlineLockClosed className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-500" />
-                <input
-                  id="register-password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  minLength={6}
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full pl-11 pr-12 py-3 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all text-sm"
-                  placeholder="Min. 6 characters"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-500 hover:text-surface-300 transition-colors"
-                >
-                  {showPassword ? <HiOutlineEyeSlash className="w-5 h-5" /> : <HiOutlineEye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label htmlFor="register-confirm" className="block text-sm font-medium text-surface-300 mb-1.5">Confirm Password</label>
-              <div className="relative">
-                <HiOutlineLockClosed className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-500" />
-                <input
-                  id="register-confirm"
-                  type="password"
-                  required
-                  value={form.confirmPassword}
-                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all text-sm"
-                  placeholder="Repeat password"
-                />
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Creating account...
-                </span>
-              ) : (
-                'Create Student Account'
-              )}
-            </button>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 18 }}>
+            <label style={labelStyle}>Full Name</label>
+            <input placeholder="John Doe" value={form.name} onChange={set('name')}
+                   onFocus={() => setFName(true)} onBlur={() => setFName(false)} style={inputStyle(fName)} />
           </div>
 
-          <p className="text-center text-sm text-surface-500 mt-6">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary-400 hover:text-primary-300 font-medium transition-colors">
-              Sign in
-            </Link>
-          </p>
+          <div style={{ marginBottom: 18 }}>
+            <label style={labelStyle}>Roll Number</label>
+            <input placeholder="2024CS001" value={form.rollNumber} onChange={set('rollNumber')}
+                   onFocus={() => setFRoll(true)} onBlur={() => setFRoll(false)} style={inputStyle(fRoll)} />
+          </div>
+
+          <div style={{ marginBottom: 18 }}>
+            <label style={labelStyle}>Email Address</label>
+            <input type="email" placeholder="you@example.com" value={form.email} onChange={set('email')}
+                   onFocus={() => setFEmail(true)} onBlur={() => setFEmail(false)} style={inputStyle(fEmail)} />
+          </div>
+
+          <div style={{ marginBottom: 18 }}>
+            <label style={labelStyle}>Password</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input type={showPw ? 'text' : 'password'} placeholder="Minimum 8 characters" value={form.password} onChange={set('password')}
+                     onFocus={() => setFPw(true)} onBlur={() => setFPw(false)} style={inputStyle(fPw)} />
+              <button type="button" onClick={() => setShowPw(!showPw)} style={{
+                background: theme === 'light' ? '#f8faff' : 'var(--bg-hover)', 
+                border: theme === 'light' ? '1.5px solid #cbd5e1' : '1px solid var(--border-input)',
+                borderRadius: 10, width: 48, flexShrink: 0, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-muted)', transition: 'color 0.2s',
+              }}>
+                {showPw ? <HiOutlineEyeSlash size={18} /> : <HiOutlineEye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 28 }}>
+            <label style={labelStyle}>Confirm Password</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input type={showCPw ? 'text' : 'password'} placeholder="Re-enter password" value={form.confirmPassword} onChange={set('confirmPassword')}
+                     onFocus={() => setFCPw(true)} onBlur={() => setFCPw(false)} style={inputStyle(fCPw)} />
+              <button type="button" onClick={() => setShowCPw(!showCPw)} style={{
+                background: theme === 'light' ? '#f8faff' : 'var(--bg-hover)', 
+                border: theme === 'light' ? '1.5px solid #cbd5e1' : '1px solid var(--border-input)',
+                borderRadius: 10, width: 48, flexShrink: 0, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-muted)', transition: 'color 0.2s',
+              }}>
+                {showCPw ? <HiOutlineEyeSlash size={18} /> : <HiOutlineEye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} className="dms-btn dms-btn-primary dms-btn-full" style={{ padding: 14 }}>
+            {loading ? 'Creating Account...' : 'Create Account'}
+          </button>
         </form>
+
+        <div style={{ marginTop: 24, textAlign: 'center' }}>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '8px 0' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: 'var(--accent-blue)', textDecoration: 'none' }}>Sign in</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

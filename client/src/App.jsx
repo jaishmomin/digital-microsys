@@ -6,13 +6,11 @@ import DashboardLayout from './components/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Public Pages
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import AdminLogin from './pages/AdminLogin';
 import Register from './pages/Register';
 import NotFound from './pages/NotFound';
-
-// Shared
-import Dashboard from './pages/Dashboard';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -35,16 +33,23 @@ const App = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-surface-950">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-3 border-primary-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-surface-500 text-sm">Loading Digital Microsys...</p>
+      <div style={{
+        minHeight: '100vh', background: '#080c14',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: '50%',
+            border: '3px solid rgba(79,142,247,0.2)', borderTopColor: '#4f8ef7',
+            animation: 'spin 0.8s linear infinite', margin: '0 auto 16px',
+          }} />
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>Loading Digital Microsys...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
   }
 
-  // Redirect helper based on role
   const getDefaultRoute = () => {
     if (!isAuthenticated) return '/login';
     return user?.role === 'admin' ? '/admin/dashboard' : '/student/dashboard';
@@ -53,20 +58,12 @@ const App = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Login />}
-      />
-      <Route
-        path="/admin/login"
-        element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <AdminLogin />}
-      />
-      <Route
-        path="/register"
-        element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Register />}
-      />
+      <Route path="/" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <LandingPage />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Login />} />
+      <Route path="/admin/login" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <AdminLogin />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Register />} />
 
-      {/* Protected: Admin-only routes */}
+      {/* Protected: Admin */}
       <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -80,24 +77,21 @@ const App = () => {
         </Route>
       </Route>
 
-      {/* Protected: Student-only routes */}
+      {/* Protected: Student */}
       <Route element={<ProtectedRoute allowedRoles={['student']} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/student/results" element={<MyResults />} />
           <Route path="/student/results/:id" element={<ResultDetail />} />
         </Route>
-        {/* TakeTest is fullscreen — no DashboardLayout */}
         <Route path="/student/test/:id" element={<TakeTest />} />
       </Route>
 
-      {/* Legacy /dashboard redirect */}
+      {/* Legacy redirect */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Navigate to={user?.role === 'admin' ? '/admin/dashboard' : '/student/dashboard'} replace />} />
       </Route>
 
-      {/* Root redirect */}
-      <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

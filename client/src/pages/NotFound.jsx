@@ -1,21 +1,22 @@
 import { Link } from 'react-router-dom';
-import { HiOutlineAcademicCap, HiOutlineExclamationTriangle } from 'react-icons/hi2';
 
 const NotFound = () => {
   return (
-    <div className="min-h-screen bg-surface-950 flex items-center justify-center p-4">
-      <div className="text-center animate-fade-in">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-surface-900/60 border border-surface-800/50 flex items-center justify-center">
-          <HiOutlineExclamationTriangle className="w-10 h-10 text-warning" />
-        </div>
-        <h1 className="text-6xl font-bold text-surface-200 mb-2">404</h1>
-        <p className="text-surface-500 mb-8">Page not found</p>
-        <Link
-          to="/dashboard"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-medium shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-all"
-        >
-          <HiOutlineAcademicCap className="w-5 h-5" />
-          Back to Dashboard
+    <div style={{
+      minHeight: '100vh', background: '#080c14',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+    }}>
+      <div className="animate-fade-in" style={{ textAlign: 'center' }}>
+        <div style={{
+          width: 80, height: 80, borderRadius: 20,
+          background: '#0d1220', border: '1px solid rgba(255,255,255,0.07)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 24px', fontSize: 36,
+        }}>⚠️</div>
+        <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: 56, fontWeight: 800, color: '#fff', marginBottom: 8 }}>404</h1>
+        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.4)', marginBottom: 32 }}>Page not found</p>
+        <Link to="/" className="dms-btn dms-btn-primary" style={{ padding: '14px 28px' }}>
+          ← Back to Home
         </Link>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { useTheme } from '../../context/ThemeContext';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../../services/api';
@@ -11,10 +12,10 @@ import {
   HiOutlineChartBarSquare,
   HiOutlinePlus,
   HiOutlineMagnifyingGlass,
-  HiOutlineArrowPath,
 } from 'react-icons/hi2';
 
 const ManageTests = () => {
+  const { theme } = useTheme();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -58,12 +59,12 @@ const ManageTests = () => {
     const start = test.startTime ? new Date(test.startTime) : null;
     const end = test.endTime ? new Date(test.endTime) : null;
 
-    if (test.status === 'draft') return { label: 'Draft', color: 'bg-surface-700/50 text-surface-400' };
-    if (start && end && now >= start && now <= end) return { label: 'Live', color: 'bg-emerald-500/20 text-emerald-400' };
-    if (start && now < start) return { label: 'Upcoming', color: 'bg-blue-500/20 text-blue-400' };
-    if (end && now > end) return { label: 'Ended', color: 'bg-surface-700/30 text-surface-500' };
-    if (test.status === 'published') return { label: 'Published', color: 'bg-amber-500/20 text-amber-400' };
-    return { label: test.status, color: 'bg-surface-700/30 text-surface-500' };
+    if (test.status === 'draft') return { label: 'Draft', bg: 'var(--bg-hover)', color: 'var(--text-muted)', border: '1px solid var(--border-input)' };
+    if (start && end && now >= start && now <= end) return { label: 'Live', bg: 'var(--accent-green-bg)', color: 'var(--accent-green)', border: '1px solid var(--accent-green-bg)' };
+    if (start && now < start) return { label: 'Upcoming', bg: 'var(--accent-blue-bg)', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue-border)' };
+    if (end && now > end) return { label: 'Ended', bg: 'var(--bg-hover)', color: 'var(--text-muted)', border: '1px solid var(--border-input)' };
+    if (test.status === 'published') return { label: 'Published', bg: 'var(--accent-amber-bg)', color: 'var(--accent-amber)', border: '1px solid var(--border-hover)' };
+    return { label: test.status, bg: 'var(--bg-hover)', color: 'var(--text-muted)', border: '1px solid var(--border-input)' };
   };
 
   const formatDateTime = (d) => d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -75,58 +76,109 @@ const ManageTests = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid var(--border-hover)', borderTopColor: 'var(--accent-amber)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: '28px'
+      }}>
         <div>
-          <h1 className="text-2xl font-bold text-surface-100">Manage Tests</h1>
-          <p className="text-surface-500 text-sm mt-1">{tests.length} test{tests.length !== 1 ? 's' : ''} total</p>
+          <h1 style={{ fontSize: '26px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+            Manage Tests
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '24px' }}>
+            {tests.length} tests total
+          </p>
         </div>
         <Link
           to="/admin/tests/create"
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-amber-500/25 text-sm w-fit"
+          style={{
+            background: 'var(--accent-blue)',
+            color: 'var(--text-primary)',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '11px 22px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            textDecoration: 'none'
+          }}
         >
-          <HiOutlinePlus className="w-4 h-4" /> Create Test
+          <HiOutlinePlus size={16} /> Create Test
         </Link>
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
-        <HiOutlineMagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search tests..."
-          className="w-full pl-10 pr-4 py-2.5 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-200 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-amber-500/30 text-sm"
-        />
+      <div style={{ marginBottom: '24px', maxWidth: '400px' }}>
+        <div style={{ position: 'relative', width: '100%' }}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search tests..."
+            style={{
+              width: '100%',
+              padding: '10px 16px 10px 42px',
+              background: 'var(--bg-hover)',
+              border: '1px solid var(--border-input)',
+              borderRadius: '10px',
+              color: 'var(--text-primary)',
+              fontSize: '14px',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
+          />
+          <span style={{
+            position: 'absolute',
+            left: '14px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: 'var(--text-muted)',
+            pointerEvents: 'none',
+            display: 'flex'
+          }}>
+            <HiOutlineMagnifyingGlass size={16} />
+          </span>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <div style={{
+        background: 'var(--bg-surface)',
+        borderRadius: '16px',
+        padding: '0',
+        overflow: 'hidden',
+        border: '1px solid var(--border-color)'
+      }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="border-b border-surface-800/50">
-                <th className="text-left px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">Test Name</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider hidden md:table-cell">Start / End</th>
-                <th className="text-center px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider hidden sm:table-cell">Duration</th>
-                <th className="text-center px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider hidden lg:table-cell">Qs</th>
-                <th className="text-center px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">Status</th>
-                <th className="text-right px-5 py-3.5 text-xs font-semibold text-surface-400 uppercase tracking-wider">Actions</th>
+              <tr style={{ background: 'var(--bg-hover)', borderBottom: '1px solid var(--border-color)' }}>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Test Name</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }} className="hidden md:table-cell">Start / End</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }} className="hidden sm:table-cell">Duration</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }} className="hidden lg:table-cell">Qs</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Status</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-800/30">
+            <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-12 text-surface-600 text-sm">
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)', fontSize: '15px' }}>
                     {search ? 'No tests match your search' : 'No tests created yet'}
                   </td>
                 </tr>
@@ -134,43 +186,75 @@ const ManageTests = () => {
                 filtered.map((test) => {
                   const status = getTestStatus(test);
                   return (
-                    <tr key={test._id} className="hover:bg-surface-800/20 transition-colors">
-                      <td className="px-5 py-3.5">
-                        <p className="text-sm font-medium text-surface-200">{test.title}</p>
-                        <p className="text-xs text-surface-500">{test.subject}</p>
+                    <tr key={test._id} style={{ borderBottom: '1px solid var(--bg-hover)', transition: 'background 0.15s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                        <p style={{ fontWeight: '500', color: 'var(--text-primary)', marginBottom: '4px' }}>{test.title}</p>
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{test.subject}</p>
                       </td>
-                      <td className="px-5 py-3.5 hidden md:table-cell">
-                        <p className="text-xs text-surface-400">{formatDateTime(test.startTime)}</p>
-                        <p className="text-xs text-surface-500">{formatDateTime(test.endTime)}</p>
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }} className="hidden md:table-cell">
+                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{formatDateTime(test.startTime)}</p>
+                        <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{formatDateTime(test.endTime)}</p>
                       </td>
-                      <td className="px-5 py-3.5 text-center hidden sm:table-cell">
-                        <span className="text-sm text-surface-300">{test.duration}m</span>
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }} className="hidden sm:table-cell">
+                        <span style={{ color: 'var(--text-secondary)' }}>{test.duration}m</span>
                       </td>
-                      <td className="px-5 py-3.5 text-center hidden lg:table-cell">
-                        <span className="text-sm text-surface-300">{test.questionCount || 0}</span>
-                        {test.hasAnswerKey && <span className="ml-1 text-emerald-400 text-xs">✓</span>}
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }} className="hidden lg:table-cell">
+                        <span style={{ color: 'var(--text-secondary)' }}>{test.questionCount || 0}</span>
+                        {test.hasAnswerKey && <span style={{ marginLeft: '4px', color: 'var(--accent-green)', fontSize: '12px' }}>✓</span>}
                       </td>
-                      <td className="px-5 py-3.5 text-center">
-                        <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${status.color}`}>
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }}>
+                        <span style={{
+                          background: status.bg,
+                          color: status.color,
+                          border: status.border,
+                          borderRadius: '20px',
+                          padding: '3px 12px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          display: 'inline-block'
+                        }}>
                           {status.label}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center justify-end gap-1">
-                          <Link to={`/admin/tests/${test._id}/edit`} title="Edit" className="p-2 rounded-lg hover:bg-surface-700/50 text-surface-400 hover:text-amber-400 transition-colors">
-                            <HiOutlinePencilSquare className="w-4 h-4" />
+                      <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                          <Link to={`/admin/tests/${test._id}/edit`} title="Edit"
+                            style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '6px', display: 'flex' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-input)'; e.currentTarget.style.color = 'var(--accent-amber)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                          >
+                            <HiOutlinePencilSquare size={16} />
                           </Link>
-                          <Link to={`/admin/tests/${test._id}/questions`} title="Questions" className="p-2 rounded-lg hover:bg-surface-700/50 text-surface-400 hover:text-blue-400 transition-colors">
-                            <HiOutlineDocumentText className="w-4 h-4" />
+                          <Link to={`/admin/tests/${test._id}/questions`} title="Questions"
+                            style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '6px', display: 'flex' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-input)'; e.currentTarget.style.color = 'var(--accent-blue)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                          >
+                            <HiOutlineDocumentText size={16} />
                           </Link>
-                          <Link to={`/admin/tests/${test._id}/answerkey`} title="Answer Key" className="p-2 rounded-lg hover:bg-surface-700/50 text-surface-400 hover:text-emerald-400 transition-colors">
-                            <HiOutlineKey className="w-4 h-4" />
+                          <Link to={`/admin/tests/${test._id}/answerkey`} title="Answer Key"
+                            style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '6px', display: 'flex' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-input)'; e.currentTarget.style.color = 'var(--accent-green)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                          >
+                            <HiOutlineKey size={16} />
                           </Link>
-                          <Link to={`/admin/results?testId=${test._id}`} title="Results" className="p-2 rounded-lg hover:bg-surface-700/50 text-surface-400 hover:text-purple-400 transition-colors">
-                            <HiOutlineChartBarSquare className="w-4 h-4" />
+                          <Link to={`/admin/results?testId=${test._id}`} title="Results"
+                            style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '6px', display: 'flex' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-input)'; e.currentTarget.style.color = '#a855f7'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                          >
+                            <HiOutlineChartBarSquare size={16} />
                           </Link>
-                          <button onClick={() => openDeleteModal(test._id, test.title)} title="Delete" className="p-2 rounded-lg hover:bg-red-500/10 text-surface-400 hover:text-red-400 transition-colors cursor-pointer">
-                            <HiOutlineTrash className="w-4 h-4" />
+                          <button onClick={() => openDeleteModal(test._id, test.title)} title="Delete"
+                            style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-input)'; e.currentTarget.style.color = 'var(--accent-red)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                          >
+                            <HiOutlineTrash size={16} />
                           </button>
                         </div>
                       </td>

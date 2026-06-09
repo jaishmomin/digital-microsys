@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../../services/api';
+import toast from 'react-hot-toast';
+import { useTheme } from '../../context/ThemeContext';
 import {
   HiOutlineClipboardDocumentList,
   HiOutlineUsers,
@@ -11,123 +13,132 @@ import {
 } from 'react-icons/hi2';
 
 const AdminDashboard = () => {
+  const { theme } = useTheme();
   const [stats, setStats] = useState({
-    totalTests: 0,
-    totalStudents: 0,
-    totalSubmissions: 0,
-    liveTests: 0,
-    recentTests: [],
-    recentSubmissions: [],
+    totalTests: 0, totalStudents: 0, totalSubmissions: 0, liveTests: 0,
+    recentTests: [], recentSubmissions: [],
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  useEffect(() => { fetchStats(); }, []);
 
   const fetchStats = async () => {
     try {
       const res = await API.get('/tests/stats/dashboard');
       setStats(res.data.data);
-    } catch (err) {
-      console.error('Failed to load stats:', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch { toast.error('Failed to load dashboard stats'); }
+    finally { setLoading(false); }
   };
 
   const cards = [
-    { label: 'Total Tests', value: stats.totalTests, icon: HiOutlineClipboardDocumentList, gradient: 'from-indigo-500 to-indigo-700', glow: 'shadow-indigo-500/20' },
-    { label: 'Total Students', value: stats.totalStudents, icon: HiOutlineUsers, gradient: 'from-amber-500 to-amber-700', glow: 'shadow-amber-500/20' },
-    { label: 'Total Submissions', value: stats.totalSubmissions, icon: HiOutlineChartBarSquare, gradient: 'from-emerald-500 to-emerald-700', glow: 'shadow-emerald-500/20' },
-    { label: 'Live Tests', value: stats.liveTests, icon: HiOutlineSignal, gradient: 'from-rose-500 to-rose-700', glow: 'shadow-rose-500/20' },
+    { label: 'Total Tests', value: stats.totalTests, icon: HiOutlineClipboardDocumentList, color: 'var(--accent-blue)', bg: 'var(--accent-blue-bg)' },
+    { label: 'Total Students', value: stats.totalStudents, icon: HiOutlineUsers, color: 'var(--accent-amber)', bg: 'var(--accent-amber-bg)' },
+    { label: 'Submissions', value: stats.totalSubmissions, icon: HiOutlineChartBarSquare, color: 'var(--accent-green)', bg: 'var(--accent-green-bg)' },
+    { label: 'Live Tests', value: stats.liveTests, icon: HiOutlineSignal, color: 'var(--accent-red)', bg: 'var(--accent-red-bg)' },
   ];
 
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', {
+    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+  }) : '—';
+
+  const getStatusPill = (status) => {
+    const map = {
+      published: { bg: 'var(--accent-green-bg)', color: 'var(--accent-green)', label: 'Published' },
+      draft: { bg: 'var(--bg-hover)', color: 'var(--text-muted)', label: 'Draft' },
+      active: { bg: 'var(--accent-blue-bg)', color: 'var(--accent-blue)', label: 'Live' },
+    };
+    const s = map[status] || map.draft;
+    return (
+      <span style={{
+        fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1,
+        background: s.bg, color: s.color,
+        borderRadius: 20, padding: '3px 10px',
+      }}>{s.label}</span>
+    );
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: '50%',
+          border: '3px solid var(--accent-amber-bg)', borderTopColor: 'var(--accent-amber)',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-surface-100">Admin Dashboard</h1>
-          <p className="text-surface-500 mt-1 text-sm">Overview of your test management system</p>
+          <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>Admin Dashboard</h1>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>Overview of your test management system</p>
         </div>
-        <div className="flex gap-3">
-          <Link
-            to="/admin/tests/create"
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-amber-500/25 text-sm"
-          >
-            <HiOutlinePlus className="w-4 h-4" /> Create Test
-          </Link>
-          <Link
-            to="/admin/students"
-            className="flex items-center gap-2 px-4 py-2.5 bg-surface-800/60 hover:bg-surface-700/60 border border-surface-700/50 text-surface-300 hover:text-surface-100 font-medium rounded-xl transition-all text-sm"
-          >
-            <HiOutlineUsers className="w-4 h-4" /> View Students
-          </Link>
-        </div>
+        <Link to="/admin/tests/create" className="dms-btn dms-btn-amber dms-btn-sm">
+          <HiOutlinePlus size={16} /> Create Test
+        </Link>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
         {cards.map((card, i) => {
           const Icon = card.icon;
           return (
-            <div
-              key={i}
-              className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-5 hover:border-surface-700/50 transition-all duration-300 group"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-medium text-surface-500 uppercase tracking-wider">{card.label}</p>
-                  <p className="text-3xl font-bold text-surface-100 mt-2">{card.value}</p>
-                </div>
-                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shadow-lg ${card.glow} group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-5 h-5 text-white" />
-                </div>
+            <div key={i} style={{
+              background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+              borderRadius: 16, padding: 24,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+              boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none',
+            }}>
+              <div>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 500 }}>{card.label}</p>
+                <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 32, fontWeight: 700, color: card.color, marginTop: 8 }}>{card.value}</p>
+              </div>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: card.bg, display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Icon size={22} style={{ color: card.color }} />
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Recent Activity Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 20 }}>
         {/* Recent Tests */}
-        <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-surface-200">Recent Tests</h2>
-            <Link to="/admin/tests" className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1">
-              View all <HiOutlineArrowRight className="w-3 h-3" />
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 16, padding: 24, boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>Recent Tests</h2>
+            <Link to="/admin/tests" style={{ fontSize: 12, color: 'var(--accent-amber)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              View all <HiOutlineArrowRight size={12} />
             </Link>
           </div>
           {stats.recentTests.length === 0 ? (
-            <p className="text-surface-600 text-sm py-8 text-center">No tests created yet</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: '32px 0' }}>No tests created yet</p>
           ) : (
-            <div className="space-y-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {stats.recentTests.slice(0, 5).map((t) => (
-                <div key={t._id} className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-surface-800/30 hover:bg-surface-800/50 transition-colors">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-surface-200 truncate">{t.title}</p>
-                    <p className="text-xs text-surface-500">{formatDate(t.createdAt)}</p>
+                <div key={t._id} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 14px', borderRadius: 10,
+                  background: 'var(--bg-hover)',
+                  transition: 'background 0.15s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                >
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{formatDate(t.createdAt)}</p>
                   </div>
-                  <span className={`ml-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    t.status === 'published' ? 'bg-emerald-500/20 text-emerald-400' :
-                    t.status === 'active' ? 'bg-blue-500/20 text-blue-400' :
-                    t.status === 'draft' ? 'bg-surface-700/50 text-surface-400' :
-                    'bg-surface-700/30 text-surface-500'
-                  }`}>
-                    {t.status}
-                  </span>
+                  {getStatusPill(t.status)}
                 </div>
               ))}
             </div>
@@ -135,29 +146,45 @@ const AdminDashboard = () => {
         </div>
 
         {/* Recent Submissions */}
-        <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-surface-200">Recent Submissions</h2>
-            <Link to="/admin/results" className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1">
-              View all <HiOutlineArrowRight className="w-3 h-3" />
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 16, padding: 24, boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>Recent Submissions</h2>
+            <Link to="/admin/results" style={{ fontSize: 12, color: 'var(--accent-amber)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              View all <HiOutlineArrowRight size={12} />
             </Link>
           </div>
           {stats.recentSubmissions.length === 0 ? (
-            <p className="text-surface-600 text-sm py-8 text-center">No submissions yet</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: '32px 0' }}>No submissions yet</p>
           ) : (
-            <div className="space-y-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {stats.recentSubmissions.slice(0, 5).map((s) => (
-                <div key={s._id} className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-surface-800/30 hover:bg-surface-800/50 transition-colors">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-surface-200 truncate">{s.studentId?.name || 'N/A'}</p>
-                    <p className="text-xs text-surface-500">{s.testId?.title || 'N/A'} · {formatDate(s.submittedAt)}</p>
-                  </div>
-                  <div className="ml-3 text-right">
-                    <p className={`text-sm font-bold ${s.percentage >= 40 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {s.percentage}%
+                <div key={s._id} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 14px', borderRadius: 10,
+                  background: 'var(--bg-hover)',
+                  transition: 'background 0.15s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                >
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {s.studentId?.name || 'N/A'}
                     </p>
+                    <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {s.testId?.title || 'N/A'} · {formatDate(s.submittedAt)}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right', marginLeft: 12 }}>
+                    <span style={{
+                      fontFamily: "'Sora', sans-serif", fontSize: 14, fontWeight: 700,
+                      color: (s.percentage || 0) >= 40 ? 'var(--accent-green)' : 'var(--accent-red)',
+                    }}>{s.percentage}%</span>
                     {s.autoSubmitted && (
-                      <span className="text-[10px] text-red-400 font-medium">AUTO</span>
+                      <span style={{
+                        display: 'block', fontSize: 9, fontWeight: 700, color: 'var(--accent-red)',
+                        marginTop: 2, letterSpacing: 1,
+                      }}>AUTO</span>
                     )}
                   </div>
                 </div>

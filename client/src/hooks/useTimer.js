@@ -1,34 +1,37 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-/**
- * Countdown timer hook for test-taking.
- * @param {number} initialSeconds - Total seconds to count down from
- * @param {function} onExpire - Callback when timer reaches 0
- * @returns {{ timeRemaining, formatted, isWarning, isCritical, isPaused, pause, resume }}
- */
-const useTimer = (initialSeconds, onExpire) => {
-  const [timeRemaining, setTimeRemaining] = useState(initialSeconds);
-  const [isPaused, setIsPaused] = useState(false);
+const useTimer = (totalSeconds, onExpire) => {
+  const [secondsLeft, setSecondsLeft] = useState(totalSeconds || 0);
   const intervalRef = useRef(null);
   const expiredRef = useRef(false);
-  const onExpireRef = useRef(onExpire);
-
-  // Keep onExpire ref fresh
-  useEffect(() => {
-    onExpireRef.current = onExpire;
-  }, [onExpire]);
 
   useEffect(() => {
-    if (isPaused || expiredRef.current) return;
+    if (!totalSeconds || totalSeconds <= 0) return;
+    setSecondsLeft(totalSeconds);
+    expiredRef.current = false;
+
+    console.log('useTimer started:', {
+      totalSeconds,
+      display: `${Math.floor(totalSeconds/60)}:${String(totalSeconds%60).padStart(2,'0')}`
+    });
+  }, [totalSeconds]);
+
+  useEffect(() => {
+    if (secondsLeft <= 0) {
+      if (!expiredRef.current && totalSeconds > 0) {
+        expiredRef.current = true;
+        onExpire && onExpire();
+      }
+      return;
+    }
 
     intervalRef.current = setInterval(() => {
-      setTimeRemaining((prev) => {
+      setSecondsLeft(prev => {
         if (prev <= 1) {
           clearInterval(intervalRef.current);
           if (!expiredRef.current) {
             expiredRef.current = true;
-            // Call onExpire in next tick to avoid state update during render
-            setTimeout(() => onExpireRef.current?.(), 0);
+            onExpire && onExpire();
           }
           return 0;
         }
@@ -36,29 +39,24 @@ const useTimer = (initialSeconds, onExpire) => {
       });
     }, 1000);
 
-    return () => clearInterval(intervalRef.current);
-  }, [isPaused]);
+    return () => {
+      clearInterval(intervalRef.current);
+    };
+  }, [secondsLeft === totalSeconds]);
 
-  const pause = useCallback(() => setIsPaused(true), []);
-  const resume = useCallback(() => setIsPaused(false), []);
+  const mins = Math.floor(secondsLeft / 60);
+  const secs = secondsLeft % 60;
+  const displayTime = 
+    `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
 
-  // Format MM:SS
-  const minutes = Math.floor(timeRemaining / 60);
-  const seconds = timeRemaining % 60;
-  const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const isWarning = secondsLeft <= 300;
+  const isCritical = secondsLeft <= 60;
 
-  // Warning thresholds
-  const isWarning = timeRemaining <= 300 && timeRemaining > 60; // < 5 min
-  const isCritical = timeRemaining <= 60; // < 1 min
-
-  return {
-    timeRemaining,
-    formatted,
-    isWarning,
-    isCritical,
-    isPaused,
-    pause,
-    resume,
+  return { 
+    secondsLeft,
+    displayTime, 
+    isWarning, 
+    isCritical 
   };
 };
 

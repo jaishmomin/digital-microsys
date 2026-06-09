@@ -1,3 +1,4 @@
+import { useTheme } from '../../context/ThemeContext';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +16,7 @@ import {
 } from 'react-icons/hi2';
 
 const StudentDashboard = () => {
+  const { theme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [tests, setTests] = useState([]);
@@ -31,27 +33,20 @@ const StudentDashboard = () => {
       ]);
       setTests(testsRes.data.data);
       setResults(resultsRes.data.data);
-    } catch (err) {
-      toast.error('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
+    } catch { toast.error('Failed to load dashboard'); }
+    finally { setLoading(false); }
   };
 
   const liveTests = tests.filter((t) => t.liveStatus === 'live');
   const upcomingTests = tests.filter((t) => t.liveStatus === 'upcoming');
-  const avgScore = results.length > 0
-    ? Math.round(results.reduce((sum, r) => sum + (r.percentage || 0), 0) / results.length)
-    : 0;
-  const bestScore = results.length > 0
-    ? Math.max(...results.map((r) => r.percentage || 0))
-    : 0;
+  const avgScore = results.length > 0 ? Math.round(results.reduce((s, r) => s + (r.percentage || 0), 0) / results.length) : 0;
+  const bestScore = results.length > 0 ? Math.max(...results.map((r) => r.percentage || 0)) : 0;
 
   const stats = [
-    { label: 'Tests Attempted', value: results.length, icon: HiOutlineClipboardDocumentList, gradient: 'from-primary-500 to-primary-700', glow: 'shadow-primary-500/20' },
-    { label: 'Average Score', value: `${avgScore}%`, icon: HiOutlineChartBarSquare, gradient: 'from-emerald-500 to-emerald-700', glow: 'shadow-emerald-500/20' },
-    { label: 'Best Score', value: `${bestScore}%`, icon: HiOutlineTrophy, gradient: 'from-amber-500 to-amber-700', glow: 'shadow-amber-500/20' },
-    { label: 'Tests Available', value: liveTests.length, icon: HiOutlineSignal, gradient: 'from-rose-500 to-rose-700', glow: 'shadow-rose-500/20' },
+    { label: 'Tests Attempted', value: results.length, icon: HiOutlineClipboardDocumentList, color: 'var(--accent-blue)' },
+    { label: 'Average Score', value: `${avgScore}%`, icon: HiOutlineChartBarSquare, color: 'var(--accent-green)' },
+    { label: 'Best Score', value: `${bestScore}%`, icon: HiOutlineTrophy, color: 'var(--accent-amber)' },
+    { label: 'Tests Available', value: liveTests.length, icon: HiOutlineSignal, color: 'var(--accent-red)' },
   ];
 
   const formatDate = (d) => d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -75,38 +70,49 @@ const StudentDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: '50%',
+          border: '3px solid var(--accent-blue-border)', borderTopColor: 'var(--accent-blue)',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
       {/* Welcome */}
-      <div className="bg-gradient-to-r from-primary-900/40 to-primary-800/20 border border-primary-700/30 rounded-2xl p-6">
-        <h1 className="text-2xl lg:text-3xl font-bold text-surface-100">
-          {greeting()}, <span className="text-primary-400">{user?.name?.split(' ')[0]}</span> 👋
+      <div style={{
+        background: 'linear-gradient(135deg, var(--accent-blue-bg) 0%, rgba(79,142,247,0.03) 100%)',
+        border: '1px solid var(--accent-blue-bg)',
+        borderRadius: 16, padding: '24px 28px',
+      }}>
+        <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>
+          {greeting()}, <span style={{ color: 'var(--accent-blue)' }}>{user?.name?.split(' ')[0]}</span> 👋
         </h1>
-        <p className="text-surface-400 mt-1 text-sm">
-          Roll No: <span className="text-surface-300 font-mono">{user?.rollNumber}</span>
+        <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>
+          Here are your available tests
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
         {stats.map((s, i) => {
           const Icon = s.icon;
           return (
-            <div key={i} className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-4 sm:p-5 group hover:border-surface-700/50 transition-all">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[10px] sm:text-xs font-medium text-surface-500 uppercase tracking-wider">{s.label}</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-surface-100 mt-1.5">{s.value}</p>
-                </div>
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center shadow-lg ${s.glow} group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-5 h-5 text-white" />
-                </div>
+            <div key={i} style={{
+              background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+              borderRadius: 16, padding: '18px 20px',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+            }}>
+              <div>
+                <p style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 500 }}>{s.label}</p>
+                <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 26, fontWeight: 700, color: s.color, marginTop: 6 }}>{s.value}</p>
+              </div>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: `${s.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={18} style={{ color: s.color }} />
               </div>
             </div>
           );
@@ -115,62 +121,81 @@ const StudentDashboard = () => {
 
       {/* Available Tests */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-surface-200">Available Tests</h2>
-        </div>
+        <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 17, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 16 }}>Available Tests</h2>
 
         {liveTests.length === 0 && upcomingTests.length === 0 ? (
-          <div className="bg-surface-900/60 border border-surface-800/50 rounded-2xl p-10 text-center">
-            <HiOutlineClipboardDocumentList className="w-10 h-10 text-surface-600 mx-auto mb-2" />
-            <p className="text-surface-500 text-sm">No tests available right now</p>
+          <div style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+            borderRadius: 16, padding: '48px 24px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>📝</div>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>No tests available yet</p>
+            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, marginTop: 4 }}>Check back later for upcoming tests</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {/* Live tests first */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
             {[...liveTests, ...upcomingTests].map((test) => {
               const isLive = test.liveStatus === 'live';
               return (
-                <div key={test._id} className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-5 hover:border-surface-700/50 transition-all group">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-surface-200 truncate">{test.title}</h3>
-                      <p className="text-xs text-surface-500 mt-0.5">{test.subject || 'General'}</p>
-                    </div>
-                    <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                      isLive ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-blue-500/20 text-blue-400'
-                    }`}>
-                      {isLive ? '● LIVE' : 'UPCOMING'}
+                <div key={test._id} style={{
+                  background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+                  borderRadius: 16, padding: 24,
+                  transition: 'border-color 0.2s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                >
+                  {/* Status badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1,
+                      background: isLive ? 'var(--accent-red-bg)' : 'var(--accent-blue-bg)',
+                      color: isLive ? 'var(--accent-red)' : 'var(--accent-blue)',
+                      borderRadius: 20, padding: '4px 12px',
+                    }}>
+                      {isLive && <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-red)' }} className="animate-pulse-dot" />}
+                      {isLive ? 'LIVE' : 'UPCOMING'}
                     </span>
                   </div>
 
-                  <div className="space-y-2 mb-4 text-xs text-surface-400">
-                    <div className="flex items-center gap-2">
-                      <HiOutlineClock className="w-3.5 h-3.5" />
-                      <span>{test.duration} minutes · {test.totalQuestions} questions</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <HiOutlineClipboardDocumentList className="w-3.5 h-3.5" />
-                      <span>{formatDate(test.startTime)} – {formatDate(test.endTime)}</span>
-                    </div>
-                  </div>
+                  {/* Title */}
+                  <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>{test.title}</h3>
 
+                  {/* Info */}
+                  <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
+                    <span>{test.totalQuestions} Qs</span>
+                    <span>{test.duration} min</span>
+                    <span>{test.maxAttempts || 1} attempt{(test.maxAttempts || 1) > 1 ? 's' : ''}</span>
+                  </div>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginBottom: 20 }}>
+                    {formatDate(test.startTime)} – {formatDate(test.endTime)}
+                  </p>
+
+                  {/* Action */}
                   {test.hasAttempted ? (
-                    <div className="flex items-center gap-2">
-                      <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-400 text-xs font-medium">
-                        <HiOutlineCheckBadge className="w-3.5 h-3.5" />
-                        Attempted · {test.bestPercentage}%
-                      </span>
+                    <div style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      background: 'var(--accent-green-bg)', color: 'var(--accent-green)',
+                      borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 600,
+                    }}>
+                      <HiOutlineCheckBadge size={16} />
+                      Attempted · {test.bestPercentage}%
                     </div>
                   ) : isLive ? (
                     <button onClick={() => navigate(`/student/test/${test._id}`)}
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-semibold rounded-xl text-xs transition-all shadow-lg shadow-primary-500/20 cursor-pointer">
-                      <HiOutlinePlayCircle className="w-4 h-4" /> Start Test
+                      className="dms-btn dms-btn-primary dms-btn-full" style={{ padding: '10px 0', fontSize: 13 }}>
+                      <HiOutlinePlayCircle size={18} /> Start Test →
                     </button>
                   ) : (
-                    <button disabled
-                      className="flex items-center gap-2 px-4 py-2 bg-surface-800/50 text-surface-500 rounded-xl text-xs font-medium">
-                      <HiOutlineClock className="w-4 h-4" /> Starts in {getTimeUntil(test.startTime)}
-                    </button>
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      color: 'var(--text-muted)', fontSize: 13,
+                      background: 'var(--bg-hover)', borderRadius: 10,
+                      padding: '10px 16px', justifyContent: 'center',
+                    }}>
+                      <HiOutlineClock size={16} /> Starts in {getTimeUntil(test.startTime)}
+                    </div>
                   )}
                 </div>
               );
@@ -181,59 +206,61 @@ const StudentDashboard = () => {
 
       {/* Previous Results */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-surface-200">Previous Results</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 17, fontWeight: 600, color: 'var(--text-primary)' }}>Previous Results</h2>
           {results.length > 0 && (
-            <Link to="/student/results" className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1">
-              View all <HiOutlineArrowRight className="w-3 h-3" />
+            <Link to="/student/results" style={{ fontSize: 12, color: 'var(--accent-blue)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              View all <HiOutlineArrowRight size={12} />
             </Link>
           )}
         </div>
 
         {results.length === 0 ? (
-          <div className="bg-surface-900/60 border border-surface-800/50 rounded-2xl p-10 text-center">
-            <HiOutlineChartBarSquare className="w-10 h-10 text-surface-600 mx-auto mb-2" />
-            <p className="text-surface-500 text-sm">No results yet. Take a test to see your scores!</p>
+          <div style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+            borderRadius: 16, padding: '48px 24px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>📊</div>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>You haven't attempted any tests yet</p>
           </div>
         ) : (
-          <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 16, overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr className="border-b border-surface-800/50">
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-surface-400 uppercase tracking-wider">Test</th>
-                    <th className="text-center px-5 py-3 text-xs font-semibold text-surface-400 uppercase tracking-wider">Score</th>
-                    <th className="text-center px-5 py-3 text-xs font-semibold text-surface-400 uppercase tracking-wider">%</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-surface-400 uppercase tracking-wider hidden sm:table-cell">Date</th>
-                    <th className="text-center px-5 py-3 text-xs font-semibold text-surface-400 uppercase tracking-wider w-16"></th>
+                  <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>Test</th>
+                    <th style={{ textAlign: 'center', padding: '12px 20px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>Score</th>
+                    <th style={{ textAlign: 'center', padding: '12px 20px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>%</th>
+                    <th className="hidden sm:table-cell" style={{ textAlign: 'left', padding: '12px 20px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>Date</th>
+                    <th style={{ width: 40 }}></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-surface-800/30">
+                <tbody>
                   {results.slice(0, 5).map((r) => {
                     const pass = (r.percentage || 0) >= 40;
                     return (
-                      <tr key={r._id} className="hover:bg-surface-800/20 transition-colors cursor-pointer" onClick={() => navigate(`/student/results/${r._id}`)}>
-                        <td className="px-5 py-3">
-                          <p className="text-sm font-medium text-surface-200">{r.testId?.title || 'N/A'}</p>
-                        </td>
-                        <td className="px-5 py-3 text-center">
-                          <span className={`text-sm font-bold ${pass ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <tr key={r._id} onClick={() => navigate(`/student/results/${r._id}`)}
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', transition: 'background 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <td style={{ padding: '12px 20px', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{r.testId?.title || 'N/A'}</td>
+                        <td style={{ padding: '12px 20px', textAlign: 'center' }}>
+                          <span style={{ fontFamily: "'Sora', sans-serif", fontSize: 13, fontWeight: 700, color: pass ? 'var(--accent-green)' : 'var(--accent-red)' }}>
                             {r.score}/{r.totalMarks}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-center">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold ${
-                            pass ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                          }`}>
-                            {r.percentage}%
-                          </span>
+                        <td style={{ padding: '12px 20px', textAlign: 'center' }}>
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, borderRadius: 20,
+                            padding: '3px 10px',
+                            background: pass ? 'var(--accent-green-bg)' : 'var(--accent-red-bg)',
+                            color: pass ? 'var(--accent-green)' : 'var(--accent-red)',
+                          }}>{r.percentage}%</span>
                         </td>
-                        <td className="px-5 py-3 hidden sm:table-cell">
-                          <span className="text-xs text-surface-500">{formatDate(r.submittedAt)}</span>
-                        </td>
-                        <td className="px-5 py-3 text-center">
-                          <HiOutlineArrowRight className="w-4 h-4 text-surface-600" />
-                        </td>
+                        <td className="hidden sm:table-cell" style={{ padding: '12px 20px', fontSize: 12, color: 'var(--text-muted)' }}>{formatDate(r.submittedAt)}</td>
+                        <td style={{ padding: '12px 20px' }}><HiOutlineArrowRight size={14} style={{ color: 'rgba(255,255,255,0.2)' }} /></td>
                       </tr>
                     );
                   })}

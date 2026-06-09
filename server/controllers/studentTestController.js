@@ -156,6 +156,10 @@ exports.getTestForAttempt = async (req, res, next) => {
  * @access  Private (student)
  */
 exports.submitTest = async (req, res, next) => {
+  console.log('=== SUBMIT TEST CALLED ===');
+  console.log('testId:', req.params.id);
+  console.log('studentId:', req.user._id);
+  console.log('body:', req.body);
   try {
     const { answers, autoSubmitted, violations, timeTaken } = req.body;
 

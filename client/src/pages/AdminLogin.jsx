@@ -1,142 +1,118 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import toast from 'react-hot-toast';
-import {
-  HiOutlineEnvelope,
-  HiOutlineLockClosed,
-  HiOutlineEye,
-  HiOutlineEyeSlash,
-  HiOutlineShieldCheck,
-} from 'react-icons/hi2';
+import { HiOutlineEye, HiOutlineEyeSlash } from 'react-icons/hi2';
 
 const AdminLogin = () => {
+  const { theme } = useTheme();
   const { login } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  const [fEmail, setFEmail] = useState(false);
+  const [fPw, setFPw] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.email || !form.password) return toast.error('Please fill all fields');
     setLoading(true);
     try {
       const user = await login(form.email, form.password, 'admin');
-      if (user.role !== 'admin') {
-        toast.error('This account does not have admin privileges');
-        setLoading(false);
-        return;
-      }
-      toast.success(`Welcome back, ${user.name}!`);
-      navigate('/dashboard');
+      toast.success('Welcome, Admin!');
+      navigate('/admin/dashboard');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Admin login failed');
+      toast.error(err.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
+  const inputStyle = (focused) => ({
+    width: '100%',
+    padding: '13px 16px',
+    background: theme === 'light' ? '#f8faff' : 'rgba(255,255,255,0.05)',
+    border: focused 
+      ? '1.5px solid var(--accent-blue)' 
+      : (theme === 'light' ? '1.5px solid #cbd5e1' : '1px solid rgba(255,255,255,0.12)'),
+    borderRadius: '10px',
+    color: theme === 'light' ? '#0f172a' : '#ffffff',
+    fontSize: '14px',
+    outline: 'none',
+    boxSizing: 'border-box',
+    fontFamily: 'inherit',
+    transition: 'all 0.2s ease'
+  });
+
+  const labelStyle = {
+    color: theme === 'light' ? '#374151' : 'var(--text-label)',
+    fontSize: '13px',
+    fontWeight: '600',
+    marginBottom: '8px',
+    display: 'block'
+  };
+
   return (
-    <div className="min-h-screen bg-surface-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background decoration — red/amber tones for admin */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-amber-500/8 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-red-500/8 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-600/5 rounded-full blur-3xl" />
-      </div>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div className="animate-fade-in" style={{
+        background: theme === 'light' ? '#ffffff' : 'var(--bg-surface)',
+        border: theme === 'light' ? '1px solid #e2e8f0' : '1px solid var(--border-color)',
+        borderRadius: 20, padding: 40, width: '100%', maxWidth: 420,
+        boxShadow: theme === 'light' ? '0 8px 40px rgba(0,0,0,0.10)' : 'none'
+      }}>
+        {/* Icon — amber */}
+        <div style={{
+          width: 56, height: 56, borderRadius: 14, background: 'var(--accent-amber)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 20px', fontSize: 24,
+        }}>🛡️</div>
 
-      <div className="w-full max-w-md relative animate-fade-in">
-        {/* Logo & Title */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-500 to-red-600 flex items-center justify-center shadow-2xl shadow-amber-500/30 animate-pulse-glow">
-            <HiOutlineShieldCheck className="w-8 h-8 text-white" />
+        <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 700, textAlign: 'center', color: 'var(--text-primary)', marginBottom: 6 }}>
+          Admin Portal
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 32 }}>
+          Restricted access. Authorized personnel only.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 20 }}>
+            <label style={labelStyle}>Email Address</label>
+            <input type="email" placeholder="admin@digitalmicrosys.com"
+              value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onFocus={() => setFEmail(true)} onBlur={() => setFEmail(false)} style={inputStyle(fEmail)} />
           </div>
-          <h1 className="text-2xl font-bold text-surface-100">Admin Panel</h1>
-          <p className="text-surface-500 mt-1 text-sm">Digital Microsys — Restricted Access</p>
-        </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-8 shadow-2xl">
-          {/* Admin notice */}
-          <div className="mb-6 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-            <p className="text-xs text-amber-400 font-medium flex items-center gap-2">
-              <HiOutlineShieldCheck className="w-4 h-4" />
-              Admin accounts are pre-provisioned. Public registration is disabled.
-            </p>
-          </div>
-
-          <div className="space-y-5">
-            {/* Email */}
-            <div>
-              <label htmlFor="admin-email" className="block text-sm font-medium text-surface-300 mb-1.5">
-                Admin Email
-              </label>
-              <div className="relative">
-                <HiOutlineEnvelope className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-500" />
-                <input
-                  id="admin-email"
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all text-sm"
-                  placeholder="admin@digitalmicrosys.com"
-                />
-              </div>
+          <div style={{ marginBottom: 28 }}>
+            <label style={labelStyle}>Password</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input type={showPw ? 'text' : 'password'} placeholder="••••••••"
+                value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
+                onFocus={() => setFPw(true)} onBlur={() => setFPw(false)} style={inputStyle(fPw)} />
+              <button type="button" onClick={() => setShowPw(!showPw)} style={{
+                background: theme === 'light' ? '#f8faff' : 'var(--bg-hover)', 
+                border: theme === 'light' ? '1.5px solid #cbd5e1' : '1px solid var(--border-input)',
+                borderRadius: 10, width: 48, flexShrink: 0, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-muted)', transition: 'color 0.2s',
+              }}>
+                {showPw ? <HiOutlineEyeSlash size={18} /> : <HiOutlineEye size={18} />}
+              </button>
             </div>
-
-            {/* Password */}
-            <div>
-              <label htmlFor="admin-password" className="block text-sm font-medium text-surface-300 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <HiOutlineLockClosed className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-500" />
-                <input
-                  id="admin-password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full pl-11 pr-12 py-3 bg-surface-800/50 border border-surface-700/50 rounded-xl text-surface-100 placeholder-surface-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all text-sm"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-500 hover:text-surface-300 transition-colors"
-                >
-                  {showPassword ? <HiOutlineEyeSlash className="w-5 h-5" /> : <HiOutlineEye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Authenticating...
-                </span>
-              ) : (
-                'Sign In as Admin'
-              )}
-            </button>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-surface-800/50">
-            <p className="text-center text-sm text-surface-500">
-              Student?{' '}
-              <Link to="/login" className="text-primary-400 hover:text-primary-300 font-medium transition-colors">
-                Student Login
-              </Link>
-            </p>
-          </div>
+          <button type="submit" disabled={loading} className="dms-btn dms-btn-amber dms-btn-full" style={{ padding: 14 }}>
+            {loading ? 'Signing in...' : 'Sign In as Admin'}
+          </button>
         </form>
+
+        <div style={{ marginTop: 24, textAlign: 'center' }}>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '8px 0' }}>
+            <Link to="/login" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>← Back to Student Login</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

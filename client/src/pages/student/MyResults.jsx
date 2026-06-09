@@ -1,3 +1,4 @@
+import { useTheme } from '../../context/ThemeContext';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../services/api';
@@ -6,10 +7,10 @@ import {
   HiOutlineChartBarSquare,
   HiOutlineArrowRight,
   HiOutlineExclamationTriangle,
-  HiOutlineCheckBadge,
 } from 'react-icons/hi2';
 
 const MyResults = () => {
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,68 +40,132 @@ const MyResults = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: '50%',
+          border: '3px solid var(--accent-blue-bg)', borderTopColor: 'var(--accent-blue)',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-surface-100">My Results</h1>
-        <p className="text-surface-500 text-sm mt-1">{results.length} test{results.length !== 1 ? 's' : ''} attempted</p>
+        <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>My Results</h1>
+        <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>{results.length} test{results.length !== 1 ? 's' : ''} attempted</p>
       </div>
 
       {results.length === 0 ? (
-        <div className="bg-surface-900/60 border border-surface-800/50 rounded-2xl p-12 text-center">
-          <HiOutlineChartBarSquare className="w-12 h-12 text-surface-600 mx-auto mb-3" />
-          <p className="text-surface-400 text-sm">No results yet</p>
-          <p className="text-surface-500 text-xs mt-1">Take a test to see your scores here</p>
+        <div style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '16px',
+          padding: '60px 40px',
+          textAlign: 'center',
+          marginTop: '8px'
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            background: 'var(--accent-blue-bg)',
+            borderRadius: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px',
+            fontSize: '28px'
+          }}>
+            📊
+          </div>
+          <p style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            color: 'var(--text-primary)',
+            marginBottom: '8px'
+          }}>
+            No results yet
+          </p>
+          <p style={{
+            fontSize: '14px',
+            color: 'var(--text-secondary)',
+            marginBottom: '24px'
+          }}>
+            Take a test to see your scores here
+          </p>
+          <button style={{
+            background: 'var(--accent-blue)',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '11px 24px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer'
+          }}
+          onClick={() => navigate('/student/dashboard')}
+          >
+            Browse Available Tests →
+          </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
           {results.map((r) => {
             const pass = (r.percentage || 0) >= 40;
             return (
               <div
                 key={r._id}
                 onClick={() => navigate(`/student/results/${r._id}`)}
-                className="bg-surface-900/60 backdrop-blur-xl border border-surface-800/50 rounded-2xl p-5 hover:border-surface-700/50 transition-all cursor-pointer group"
+                style={{
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '16px',
+                  padding: '20px 24px',
+                  marginBottom: '12px',
+                  boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-hover)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}
               >
                 {/* Title + Badge */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-surface-200 truncate group-hover:text-surface-100 transition-colors">
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {r.testId?.title || 'Unknown Test'}
                     </h3>
-                    <p className="text-xs text-surface-500 mt-0.5">{r.testId?.subject || 'General'}</p>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{r.testId?.subject || 'General'}</p>
                   </div>
-                  <span className={`ml-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                    pass ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                  }`}>
+                  <span style={{
+                    marginLeft: 8, padding: '4px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, flexShrink: 0,
+                    background: pass ? 'var(--accent-green-bg)' : 'var(--accent-red-bg)',
+                    color: pass ? 'var(--accent-green)' : 'var(--accent-red)'
+                  }}>
                     {pass ? 'PASS' : 'FAIL'}
                   </span>
                 </div>
 
                 {/* Score */}
-                <div className="flex items-end gap-3 mb-4">
-                  <p className={`text-3xl font-bold ${pass ? 'text-emerald-400' : 'text-red-400'}`}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, marginBottom: 16 }}>
+                  <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 28, fontWeight: 700, color: pass ? 'var(--accent-green)' : 'var(--accent-red)' }}>
                     {r.percentage}%
                   </p>
-                  <p className="text-sm text-surface-400 pb-0.5">
+                  <p style={{ fontSize: 14, color: 'var(--text-muted)', paddingBottom: 2 }}>
                     {r.score}/{r.totalMarks}
                   </p>
                 </div>
 
                 {/* Meta */}
-                <div className="flex items-center justify-between text-xs text-surface-500">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
                   <span>{formatDate(r.submittedAt)}</span>
-                  <div className="flex items-center gap-2">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     {r.autoSubmitted && (
-                      <span className="flex items-center gap-1 text-red-400">
-                        <HiOutlineExclamationTriangle className="w-3 h-3" /> Auto
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--accent-red)' }}>
+                        <HiOutlineExclamationTriangle size={12} /> Auto
                       </span>
                     )}
                     <span>{formatTime(r.timeTaken)}</span>
@@ -108,9 +173,9 @@ const MyResults = () => {
                 </div>
 
                 {/* View detail arrow */}
-                <div className="mt-3 pt-3 border-t border-surface-800/30 flex items-center justify-end">
-                  <span className="text-xs text-primary-400 group-hover:text-primary-300 flex items-center gap-1 transition-colors">
-                    View Details <HiOutlineArrowRight className="w-3 h-3" />
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                  <span style={{ fontSize: 12, color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    View Details <HiOutlineArrowRight size={12} />
                   </span>
                 </div>
               </div>
