@@ -437,6 +437,9 @@ body {
   0%, 100% { box-shadow: 0 0 20px rgba(79,142,247,0.15); }
   50% { box-shadow: 0 0 40px rgba(79,142,247,0.3); }
 }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
 .animate-slide-up { animation: slideUp 0.5s ease-out forwards; }

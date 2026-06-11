@@ -6,8 +6,8 @@ const answerSchema = new mongoose.Schema({
     required: true,
   },
   selectedOption: {
-    type: String, // 'A', 'B', 'C', 'D' or empty string if unanswered
-    enum: ['A', 'B', 'C', 'D', ''],
+    type: String, // 'A', 'B', 'C', 'D', 'E' or empty string if unanswered
+    enum: ['A', 'B', 'C', 'D', 'E', ''],
     default: '',
   },
 });
@@ -36,6 +36,18 @@ const resultSchema = new mongoose.Schema(
       required: true,
     },
     answers: [answerSchema],
+    correctAnswers: {
+      type: Number,
+      default: 0
+    },
+    incorrectAnswers: {
+      type: Number,
+      default: 0
+    },
+    unattempted: {
+      type: Number,
+      default: 0
+    },
     score: {
       type: Number,
       default: 0,

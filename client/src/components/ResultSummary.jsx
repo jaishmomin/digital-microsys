@@ -19,9 +19,19 @@ const ResultSummary = ({ result, showViolationBanner = true }) => {
   const passingPct = result.testId?.passingPercentage ?? 40;
   const passed = percentage >= passingPct;
 
-  const correct = result.correctAnswers ?? 0;
-  const incorrect = result.incorrectAnswers ?? 0;
-  const unattempted = result.unattempted ?? 0;
+  const correct = 
+    result?.correctAnswers ?? 
+    result?.correct ?? 
+    result?.correctCount ?? 0;
+
+  const incorrect = 
+    result?.incorrectAnswers ?? 
+    result?.incorrect ?? 
+    result?.incorrectCount ?? 0;
+
+  const unattempted = 
+    result?.unattempted ?? 
+    result?.unattemptedCount ?? 0;
 
   const formatTime = (sec) => {
     if (!sec) return '0m 0s';

@@ -49,7 +49,20 @@ const StudentDashboard = () => {
     { label: 'Tests Available', value: liveTests.length, icon: HiOutlineSignal, color: 'var(--accent-red)' },
   ];
 
-  const formatDate = (d) => d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleString(
+      'en-IN',
+      {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }
+    );
+  };
 
   const getTimeUntil = (start) => {
     const diff = new Date(start) - new Date();

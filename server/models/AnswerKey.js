@@ -8,7 +8,7 @@ const answerEntrySchema = new mongoose.Schema({
   correctOption: {
     type: String,
     required: [true, 'Correct option is required'],
-    enum: ['A', 'B', 'C', 'D'],
+    enum: ['A', 'B', 'C', 'D', 'E'],
   },
 });
 

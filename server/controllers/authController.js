@@ -2,78 +2,239 @@ const crypto = require('crypto');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const { generateToken } = require('../utils/token');
-const { sendEmail } = require('../utils/email');
+const { sendEmail, sendOTPEmail } = require('../utils/email');
 const config = require('../config');
+const OTP = require('../models/OTP');
 
 /**
  * @desc    Register a new student (public registration is student-only)
  * @route   POST /api/auth/register
  * @access  Public
  */
-exports.register = async (req, res, next) => {
+exports.sendOTP = async (req, res) => {
   try {
-    // Validate input
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
-    }
+    console.log('=== SEND OTP CALLED ===');
+    console.log('Request body:', req.body);
+    console.log('Email config:', {
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      user: process.env.SMTP_USER,
+      passExists: !!process.env.SMTP_PASS
+    });
 
-    const { name, email, password, rollNumber, phone, department } = req.body;
+    const { email, name } = req.body;
 
-    // Block admin registration via public route
-    // Admin accounts are seeded directly into the database
-    const role = 'student';
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'An account with this email already exists',
+        message: 'Email is required'
       });
     }
 
-    // Check if roll number already taken
-    if (rollNumber) {
-      const existingRoll = await User.findOne({ rollNumber });
-      if (existingRoll) {
-        return res.status(400).json({
-          success: false,
-          message: 'This roll number is already registered',
-        });
-      }
+    // Check if email already registered
+    const existingUser = await User.findOne({
+      email: email.toLowerCase().trim()
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'This email is already registered. Please login instead.'
+      });
     }
 
-    // Create student user
-    const user = await User.create({
+    // Delete old OTPs for this email
+    await OTP.deleteMany({
+      email: email.toLowerCase().trim()
+    });
+
+    // Generate 6-digit OTP
+    const otpCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+
+    console.log('Generated OTP:', otpCode, 'for:', email);
+
+    // Save to database first
+    const otpRecord = await OTP.create({
+      email: email.toLowerCase().trim(),
+      otp: otpCode,
+      expiresAt: new Date(
+        Date.now() + 10 * 60 * 1000
+      ),
+      verified: false,
+      attempts: 0
+    });
+
+    console.log('OTP saved to DB:', otpRecord._id);
+
+    // Try to send email
+    try {
+      await sendOTPEmail(
+        email.trim(),
+        otpCode,
+        name || 'Student'
+      );
+      console.log('Email sent successfully');
+    } catch (emailError) {
+      console.error('EMAIL SEND FAILED:', {
+        message: emailError.message,
+        code: emailError.code,
+        command: emailError.command
+      });
+      
+      // Delete OTP if email failed
+      await OTP.deleteOne({ 
+        _id: otpRecord._id 
+      });
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP email. Please check your email address and try again.',
+        debug: process.env.NODE_ENV === 'development' ? emailError.message : undefined
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP sent successfully to ' + email + '. Valid for 10 minutes.'
+    });
+
+  } catch (error) {
+    console.error('SEND OTP ERROR:', {
+      message: error.message,
+      stack: error.stack
+    });
+    return res.status(500).json({
+      success: false,
+      message: 'Server error. Please try again.',
+      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+exports.register = async (req, res) => {
+  try {
+    const {
       name,
       email,
       password,
-      role,
       rollNumber,
-      phone: phone || '',
-      department: department || '',
+      mobileNumber,
+      collegeName,
+      branch,
+      otp
+    } = req.body;
+
+    // Validate all fields
+    if (!name || !email || !password || 
+        !rollNumber || !mobileNumber || 
+        !collegeName || !branch || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields including OTP are required'
+      });
+    }
+
+    // Check if already registered
+    const existing = await User.findOne({ 
+      email: email.toLowerCase() 
+    });
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already registered'
+      });
+    }
+
+    // VERIFY OTP
+    const otpRecord = await OTP.findOne({
+      email: email.toLowerCase(),
+      verified: false
     });
 
-    // Generate token
+    if (!otpRecord) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP not found. Please request a new OTP.'
+      });
+    }
+
+    // Check expiry
+    if (new Date() > otpRecord.expiresAt) {
+      await OTP.deleteOne({ 
+        _id: otpRecord._id 
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired. Please request a new OTP.'
+      });
+    }
+
+    // Check max attempts (max 5)
+    if (otpRecord.attempts >= 5) {
+      await OTP.deleteOne({ 
+        _id: otpRecord._id 
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'Too many wrong attempts. Please request a new OTP.'
+      });
+    }
+
+    // Verify OTP value
+    if (otpRecord.otp !== otp.toString().trim()) {
+      // Increment attempts
+      await OTP.updateOne(
+        { _id: otpRecord._id },
+        { $inc: { attempts: 1 } }
+      );
+      
+      const remaining = 5 - (otpRecord.attempts + 1);
+      return res.status(400).json({
+        success: false,
+        message: `Invalid OTP. ${remaining} attempts remaining.`
+      });
+    }
+
+    // OTP is valid — mark as verified
+    await OTP.deleteOne({ _id: otpRecord._id });
+
+    // Create user account
+    const user = await User.create({
+      name: name.trim(),
+      email: email.toLowerCase(),
+      password,
+      rollNumber: rollNumber.trim(),
+      mobileNumber: mobileNumber.trim(),
+      collegeName: collegeName.trim(),
+      branch,
+      role: 'student',
+      isActive: true
+    });
+
+    // Generate JWT token
     const token = generateToken(user._id);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: 'Registration successful',
-      data: {
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          rollNumber: user.rollNumber,
-        },
-      },
+      message: 'Registration successful! Welcome to Digital Microsys.',
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        rollNumber: user.rollNumber,
+        role: user.role
+      }
     });
+
   } catch (error) {
-    next(error);
+    console.error('Register error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Registration failed. Please try again.'
+    });
   }
 };
 

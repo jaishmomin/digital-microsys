@@ -37,6 +37,11 @@ const questionSchema = new mongoose.Schema(
       required: [true, 'Option D is required'],
       trim: true,
     },
+    optionE: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     marks: {
       type: Number,
       default: 1,

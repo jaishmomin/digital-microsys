@@ -125,7 +125,7 @@ const UploadAnswerKey = () => {
           {/* Bulk Fill */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', background: 'var(--bg-hover)', borderRadius: '12px', marginBottom: '20px', border: '1px solid var(--border-color)' }}>
             <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)' }}>Bulk Fill:</span>
-            {['A','B','C','D'].map(opt => (
+            {['A','B','C','D','E'].map(opt => (
               <button key={opt} onClick={() => setBulkOption(opt)} style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1.5px solid var(--border-input)', background: bulkOption === opt ? 'var(--accent-amber)' : 'var(--bg-surface)', color: bulkOption === opt ? '#fff' : 'var(--text-primary)', fontSize: '14px', fontWeight: '700', cursor: 'pointer' }}>
                 {opt}
               </button>
@@ -144,7 +144,7 @@ const UploadAnswerKey = () => {
                   <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>{q.questionText}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  {['A','B','C','D'].map(opt => (
+                  {['A','B','C','D', ...(q.optionE ? ['E'] : [])].map(opt => (
                     <button key={opt} onClick={() => setAnswer(q.questionNo, opt)} className={`abcd-button ${answers[q.questionNo] === opt ? 'selected' : ''}`} style={{ width: '40px', height: '40px', borderRadius: '8px', border: answers[q.questionNo] === opt ? '2px solid var(--accent-blue)' : '1.5px solid var(--border-input)', background: answers[q.questionNo] === opt ? 'var(--accent-blue)' : 'var(--bg-surface)', color: answers[q.questionNo] === opt ? '#ffffff' : 'var(--text-primary)', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.15s' }}>
                       {opt}
                     </button>

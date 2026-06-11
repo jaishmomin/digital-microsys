@@ -11,6 +11,7 @@ router.use(authorize('admin'));
 router.get('/students', userController.getAllStudents);
 router.get('/students/:id', userController.getStudentById);
 router.get('/students/:id/results', userController.getStudentResults);
+router.delete('/students/:id', userController.deleteStudent);
 
 // General user CRUD
 router.get('/', userController.getUsers);

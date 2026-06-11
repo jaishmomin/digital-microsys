@@ -8,6 +8,7 @@ import {
   HiOutlineMagnifyingGlass,
   HiOutlineChartBarSquare,
 } from 'react-icons/hi2';
+import { Trash2, BarChart2 } from 'lucide-react';
 
 const ManageStudents = () => {
   const { theme } = useTheme();
@@ -17,6 +18,9 @@ const ManageStudents = () => {
   const [search, setSearch] = useState('');
   const [toggling, setToggling] = useState(null);
   const [toggleModal, setToggleModal] = useState({ open: false, student: null });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => { fetchStudents(); }, []);
 
@@ -56,6 +60,31 @@ const ManageStudents = () => {
       toast.error('Toggle failed');
     } finally {
       setToggling(null);
+    }
+  };
+
+  const handleDeleteClick = (student) => {
+    setStudentToDelete(student);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!studentToDelete) return;
+    
+    setDeleteLoading(true);
+    try {
+      const res = await API.delete(`/users/students/${studentToDelete._id}`);
+      
+      if (res.data.success) {
+        setStudents(prev => prev.filter(s => s._id !== studentToDelete._id));
+        setShowDeleteModal(false);
+        setStudentToDelete(null);
+        toast.success(`${studentToDelete.name} has been deleted successfully`);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete student');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -138,6 +167,8 @@ const ManageStudents = () => {
                 <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Name</th>
                 <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }} className="hidden sm:table-cell">Email</th>
                 <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Roll No</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }} className="hidden lg:table-cell">College</th>
+                <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }} className="hidden lg:table-cell">Branch</th>
                 <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Status</th>
                 <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }} className="hidden md:table-cell">Joined</th>
                 <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Actions</th>
@@ -146,7 +177,7 @@ const ManageStudents = () => {
             <tbody>
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)', fontSize: '15px' }}>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)', fontSize: '15px' }}>
                     {search ? 'No students match your search' : 'No students registered yet'}
                   </td>
                 </tr>
@@ -179,6 +210,12 @@ const ManageStudents = () => {
                     <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }}>
                       <span style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>{s.rollNumber}</span>
                     </td>
+                    <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }} className="hidden lg:table-cell">
+                      <span style={{ color: 'var(--text-secondary)' }}>{s.collegeName || '—'}</span>
+                    </td>
+                    <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }} className="hidden lg:table-cell">
+                      <span style={{ color: 'var(--text-secondary)' }}>{s.branch || '—'}</span>
+                    </td>
                     <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => openToggleModal(s)}
@@ -203,13 +240,36 @@ const ManageStudents = () => {
                       <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{formatDate(s.createdAt)}</span>
                     </td>
                     <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <button onClick={() => navigate(`/admin/results?studentId=${s._id}`)} title="View Results"
-                          style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-input)'; e.currentTarget.style.color = 'var(--accent-amber)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <button onClick={() => navigate(`/admin/results?student=${s._id}`)} title="View Results"
+                          style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}
                         >
-                          <HiOutlineChartBarSquare size={16} />
+                          <BarChart2 size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(s)}
+                          title="Delete Student"
+                          style={{
+                            background:'var(--accent-red-bg)',
+                            border:'1px solid rgba(239,68,68,0.2)',
+                            borderRadius:'8px',
+                            padding:'7px',
+                            cursor:'pointer',
+                            color:'var(--accent-red)',
+                            display:'flex',
+                            alignItems:'center',
+                            transition:'all 0.15s'
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = 'var(--accent-red)';
+                            e.currentTarget.style.color = '#fff';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = 'var(--accent-red-bg)';
+                            e.currentTarget.style.color = 'var(--accent-red)';
+                          }}
+                        >
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
@@ -235,6 +295,19 @@ const ManageStudents = () => {
         confirmText={toggleModal.student?.isActive ? 'Disable' : 'Enable'}
         variant={toggleModal.student?.isActive ? 'warning' : 'info'}
         loading={toggling === toggleModal.student?._id}
+      />
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Delete Student?"
+        message={`Are you sure you want to permanently delete "${studentToDelete?.name}"? This will also delete all their test results and violation records. This action cannot be undone.`}
+        confirmText={deleteLoading ? 'Deleting...' : 'Delete Student'}
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setStudentToDelete(null);
+        }}
       />
     </div>
   );

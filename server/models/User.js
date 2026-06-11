@@ -33,6 +33,21 @@ const userSchema = new mongoose.Schema(
       trim: true,
       // Required only for students — enforced via pre-validate hook
     },
+    mobileNumber: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    collegeName: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    branch: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     avatar: {
       type: String,
       default: '',

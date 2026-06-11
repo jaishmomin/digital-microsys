@@ -67,7 +67,20 @@ const ManageTests = () => {
     return { label: test.status, bg: 'var(--bg-hover)', color: 'var(--text-muted)', border: '1px solid var(--border-input)' };
   };
 
-  const formatDateTime = (d) => d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleString(
+      'en-IN',
+      {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }
+    );
+  };
 
   const filtered = tests.filter((t) =>
     t.title.toLowerCase().includes(search.toLowerCase()) ||

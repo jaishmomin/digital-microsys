@@ -8,6 +8,13 @@ import {
   HiOutlineArrowLeft,
 } from 'react-icons/hi2';
 
+// Convert local datetime input to UTC ISO string
+const localToUTC = (localDateTimeStr) => {
+  if (!localDateTimeStr) return null;
+  const localDate = new Date(localDateTimeStr);
+  return localDate.toISOString();
+};
+
 const CreateTest = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -46,8 +53,8 @@ const CreateTest = () => {
         maxAttempts: Number(form.maxAttempts),
         marksPerQuestion: Number(form.marksPerQuestion),
         negativeMarks: form.negativeMarking ? Number(form.negativeMarks) : 0,
-        startTime: form.startTime || undefined,
-        endTime: form.endTime || undefined,
+        startTime: localToUTC(form.startTime) || undefined,
+        endTime: localToUTC(form.endTime) || undefined,
       };
       const res = await API.post('/tests', payload);
       toast.success('Test created successfully!');

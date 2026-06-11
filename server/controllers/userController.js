@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Result = require('../models/Result');
+const Violation = require('../models/Violation');
 
 /**
  * @desc    Get all users (paginated, filterable)
@@ -60,7 +61,7 @@ exports.getAllStudents = async (req, res, next) => {
 
     const [students, total] = await Promise.all([
       User.find(filter)
-        .select('name email rollNumber isActive department createdAt lastLogin')
+        .select('name email rollNumber mobileNumber collegeName branch isActive department createdAt lastLogin')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
@@ -217,5 +218,56 @@ exports.toggleActive = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+exports.deleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log('Delete student request:', id);
+
+    // Find student first
+    const student = await User.findById(id);
+    
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+
+    // Prevent deleting admin accounts
+    if (student.role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Cannot delete admin accounts'
+      });
+    }
+
+    // Delete all student's results
+    const resultsDeleted = await Result.deleteMany({ studentId: id });
+    console.log('Results deleted:', resultsDeleted.deletedCount);
+
+    // Delete all student's violations
+    const violationsDeleted = await Violation.deleteMany({ studentId: id });
+    console.log('Violations deleted:', violationsDeleted.deletedCount);
+
+    // Delete the student account
+    await User.findByIdAndDelete(id);
+    
+    console.log('Student deleted:', student.email);
+
+    return res.status(200).json({
+      success: true,
+      message: `Student "${student.name}" has been permanently deleted along with all their results.`
+    });
+
+  } catch (error) {
+    console.error('Delete student error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to delete student'
+    });
   }
 };

@@ -3,6 +3,7 @@ const Question = require('../models/Question');
 const AnswerKey = require('../models/AnswerKey');
 const Result = require('../models/Result');
 const Violation = require('../models/Violation');
+const evaluateAnswers = require('../utils/evaluateAnswers');
 
 /**
  * @desc    Get available tests for student (live + upcoming)
@@ -114,7 +115,7 @@ exports.getTestForAttempt = async (req, res, next) => {
 
     // Get questions WITHOUT correct answers
     const questions = await Question.find({ testId: test._id })
-      .select('questionNo questionText optionA optionB optionC optionD marks')
+      .select('questionNo questionText optionA optionB optionC optionD optionE marks')
       .sort({ questionNo: 1 });
 
     if (questions.length === 0) {
@@ -190,50 +191,20 @@ exports.submitTest = async (req, res, next) => {
       });
     }
 
-    // Build answer key map
-    const keyMap = {};
-    answerKey.answers.forEach((a) => {
-      keyMap[a.questionNo] = a.correctOption;
-    });
-
-    // Get total question count
-    const totalQuestions = await Question.countDocuments({ testId: test._id });
-
-    // Grade answers
-    let correctAnswers = 0;
-    let incorrectAnswers = 0;
-    let unattempted = 0;
-    let score = 0;
-
+    // Fetch all questions to evaluate
+    const questions = await Question.find({ testId: test._id });
     const answersArray = answers || [];
-    const answeredNos = new Set(answersArray.map((a) => a.questionNo));
 
-    // Count unattempted
-    for (let i = 1; i <= totalQuestions; i++) {
-      if (!answeredNos.has(i)) unattempted++;
-    }
+    // Evaluate answers
+    const evaluation = evaluateAnswers(questions, answerKey, answersArray, test);
 
-    // Evaluate each answer
-    answersArray.forEach((ans) => {
-      if (!ans.selectedOption) {
-        unattempted++;
-        return;
-      }
-
-      if (keyMap[ans.questionNo] === ans.selectedOption) {
-        correctAnswers++;
-        score += test.marksPerQuestion;
-      } else {
-        incorrectAnswers++;
-        if (test.negativeMarking && test.negativeMarks) {
-          score -= test.negativeMarks;
-        }
-      }
+    console.log('Evaluation result:', {
+      score: evaluation.score,
+      percentage: evaluation.percentage,
+      correctCount: evaluation.correctCount,
+      incorrectCount: evaluation.incorrectCount,
+      unattemptedCount: evaluation.unattemptedCount
     });
-
-    score = Math.max(0, Math.round(score * 100) / 100);
-    const totalMarks = totalQuestions * test.marksPerQuestion;
-    const percentage = totalMarks > 0 ? Math.round((score / totalMarks) * 100) : 0;
 
     // Save violations to Violation model
     const violationDocs = [];
@@ -255,12 +226,12 @@ exports.submitTest = async (req, res, next) => {
       testId: test._id,
       studentId: req.user._id,
       answers: answersArray,
-      score,
-      totalMarks,
-      percentage,
-      correctAnswers,
-      incorrectAnswers,
-      unattempted,
+      score: evaluation.score,
+      totalMarks: evaluation.totalMarks,
+      percentage: evaluation.percentage,
+      correctAnswers: evaluation.correctCount,
+      incorrectAnswers: evaluation.incorrectCount,
+      unattempted: evaluation.unattemptedCount,
       timeTaken: timeTaken || 0,
       attemptNumber: attemptCount + 1,
       autoSubmitted: autoSubmitted || false,
@@ -268,6 +239,12 @@ exports.submitTest = async (req, res, next) => {
       status: 'graded',
       submittedAt: new Date(),
       ipAddress: req.ip,
+    });
+
+    console.log('Result saved:', {
+      correctAnswers: result.correctAnswers,
+      incorrectAnswers: result.incorrectAnswers,
+      unattempted: result.unattempted
     });
 
     res.status(201).json({
@@ -329,7 +306,7 @@ exports.getResultDetail = async (req, res, next) => {
 
     // Get questions + answer key for comparison
     const questions = await Question.find({ testId: result.testId._id })
-      .select('questionNo questionText optionA optionB optionC optionD marks')
+      .select('questionNo questionText optionA optionB optionC optionD optionE marks')
       .sort({ questionNo: 1 });
 
     const answerKey = await AnswerKey.findOne({ testId: result.testId._id });
@@ -359,6 +336,7 @@ exports.getResultDetail = async (req, res, next) => {
         optionB: q.optionB,
         optionC: q.optionC,
         optionD: q.optionD,
+        optionE: q.optionE,
         studentAnswer,
         correctAnswer,
         isCorrect,
@@ -373,7 +351,15 @@ exports.getResultDetail = async (req, res, next) => {
       testId: result.testId._id,
     }).sort({ timestamp: 1 });
 
-    const rObj = result.toObject();
+    const rObj = {
+      ...result.toObject(),
+      correctAnswers: result.correctAnswers || 0,
+      incorrectAnswers: result.incorrectAnswers || 0,
+      unattempted: result.unattempted || 0,
+      score: result.score || 0,
+      percentage: result.percentage || 0,
+      timeTaken: result.timeTaken || 0
+    };
     rObj.comparison = comparison;
     rObj.violationRecords = violationRecords;
 

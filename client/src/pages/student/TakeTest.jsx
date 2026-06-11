@@ -305,7 +305,7 @@ const ActiveTest = ({ testData }) => {
 
             {/* Options */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {['A', 'B', 'C', 'D'].map((opt) => {
+              {['A', 'B', 'C', 'D', ...(current.optionE ? ['E'] : [])].map((opt) => {
                 const selected = state.answers[current.questionNo] === opt;
                 return (
                   <button key={opt} onClick={() => dispatch({ type: 'SET_ANSWER', questionNo: current.questionNo, option: opt })}

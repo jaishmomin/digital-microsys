@@ -229,6 +229,7 @@ exports.addQuestionsManually = async (req, res, next) => {
       optionB: q.optionB,
       optionC: q.optionC,
       optionD: q.optionD,
+      optionE: q.optionE || '',
       marks: q.marks || test.marksPerQuestion,
     }));
 
@@ -265,68 +266,116 @@ exports.addQuestionsManually = async (req, res, next) => {
  */
 exports.uploadQuestionsCSV = async (req, res, next) => {
   try {
+    console.log('CSV upload received');
+    console.log('File:', req.file);
+    console.log('TestId:', req.params.id);
+
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No CSV file uploaded' });
+      return res.status(400).json({
+        success: false,
+        message: 'No CSV file uploaded'
+      });
     }
 
     const test = await Test.findById(req.params.id);
     if (!test) {
-      fs.unlinkSync(req.file.path);
+      if (req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(404).json({ success: false, message: 'Test not found' });
     }
 
-    const csvData = fs.readFileSync(req.file.path, 'utf-8');
-    const { data, errors } = Papa.parse(csvData, {
+    const Papa = require('papaparse');
+    const csvString = req.file.buffer 
+      ? req.file.buffer.toString('utf8') 
+      : fs.readFileSync(req.file.path, 'utf-8');
+
+    const parsed = Papa.parse(csvString, {
       header: true,
       skipEmptyLines: true,
-      transformHeader: (h) => h.trim().toLowerCase().replace(/[\s_]+/g, ''),
+      trimHeaders: true,
+      transform: (value) => value.trim()
     });
 
-    if (errors.length > 0) {
-      fs.unlinkSync(req.file.path);
+    console.log('Parsed rows:', parsed.data.length);
+    console.log('First row:', parsed.data[0]);
+    console.log('Fields found:', parsed.meta.fields);
+
+    const requiredFields = [
+      'questionText', 'optionA', 
+      'optionB', 'optionC', 'optionD'
+    ];
+
+    const fields = parsed.meta.fields.map(
+      f => f.toLowerCase().trim()
+    );
+
+    for (const field of requiredFields) {
+      if (!fields.includes(field.toLowerCase())) {
+        if (req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        return res.status(400).json({
+          success: false,
+          message: `Missing required column: ${field}. Required columns: questionNo, questionText, optionA, optionB, optionC, optionD, optionE (optional), marks`
+        });
+      }
+    }
+
+    const questions = parsed.data
+      .filter(row => 
+        row.questionText && 
+        row.questionText.trim() !== ''
+      )
+      .map((row, index) => {
+        // Handle case-insensitive column names
+        const getField = (obj, fieldName) => {
+          const key = Object.keys(obj).find(
+            k => k.toLowerCase().trim() === 
+                 fieldName.toLowerCase()
+          );
+          return key ? obj[key]?.trim() : '';
+        };
+
+        return {
+          testId: req.params.id,
+          questionNo: parseInt(
+            getField(row, 'questionno')
+          ) || (index + 1),
+          questionText: getField(row, 'questiontext'),
+          optionA: getField(row, 'optiona'),
+          optionB: getField(row, 'optionb'),
+          optionC: getField(row, 'optionc'),
+          optionD: getField(row, 'optiond'),
+          optionE: getField(row, 'optione') || '',
+          marks: parseFloat(
+            getField(row, 'marks')
+          ) || 1
+        };
+      });
+
+    console.log('Questions to insert:', questions.length);
+
+    if (questions.length === 0) {
+      if (req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(400).json({
         success: false,
-        message: 'CSV parsing errors',
-        errors: errors.slice(0, 5),
+        message: 'No valid questions found in CSV. Check column names match required format.'
       });
     }
 
-    if (data.length === 0) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({ success: false, message: 'CSV file is empty' });
-    }
-
-    const questions = data.map((row, idx) => ({
-      testId: test._id,
-      questionNo: parseInt(row.questionno || row.questionnumber, 10) || idx + 1,
-      questionText: row.questiontext || row.question || '',
-      optionA: row.optiona || '',
-      optionB: row.optionb || '',
-      optionC: row.optionc || '',
-      optionD: row.optiond || '',
-      marks: parseInt(row.marks, 10) || test.marksPerQuestion,
-    }));
-
-    // Replace all existing questions for this test
-    await Question.deleteMany({ testId: test._id });
-    const inserted = await Question.insertMany(questions);
+    await Question.deleteMany({ testId: req.params.id });
+    await Question.insertMany(questions);
 
     // Update total marks
     test.totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
     await test.save();
 
-    fs.unlinkSync(req.file.path);
+    if (req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
 
-    res.json({
+    return res.status(200).json({
       success: true,
-      message: `${inserted.length} questions imported from CSV`,
-      data: {
-        importedCount: inserted.length,
-        totalMarks: test.totalMarks,
-      },
+      message: `${questions.length} questions uploaded successfully`,
+      count: questions.length
     });
   } catch (error) {
-    if (req.file && fs.existsSync(req.file.path)) {
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
     next(error);
@@ -355,12 +404,12 @@ exports.uploadAnswerKey = async (req, res, next) => {
 
     // Validate options
     const valid = answers.every(
-      (a) => a.questionNo && ['A', 'B', 'C', 'D'].includes(a.correctOption)
+      (a) => a.questionNo && ['A', 'B', 'C', 'D', 'E'].includes(a.correctOption)
     );
     if (!valid) {
       return res.status(400).json({
         success: false,
-        message: 'Each answer must have questionNo and correctOption (A/B/C/D)',
+        message: 'Each answer must have questionNo and correctOption (A/B/C/D/E)',
       });
     }
 

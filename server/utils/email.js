@@ -5,14 +5,26 @@ const config = require('../config');
  * Create reusable transporter.
  */
 const createTransporter = () => {
+  console.log('Email env check:', {
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    user: process.env.SMTP_USER,
+    passExists: !!process.env.SMTP_PASS
+  });
+
   return nodemailer.createTransport({
-    host: config.smtp.host,
-    port: config.smtp.port,
-    secure: config.smtp.port === 465,
+    host: process.env.SMTP_HOST || 
+      'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT) 
+      || 587,
+    secure: false,
     auth: {
-      user: config.smtp.user,
-      pass: config.smtp.pass,
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
     },
+    tls: {
+      rejectUnauthorized: false
+    }
   });
 };
 
@@ -25,7 +37,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
     const transporter = createTransporter();
 
     const info = await transporter.sendMail({
-      from: `"Digital Microsys" <${config.smtp.user}>`,
+      from: `"Digital Microsys" <${process.env.SMTP_USER}>`,
       to,
       subject,
       html,
@@ -91,4 +103,84 @@ const sendResultNotification = async (studentEmail, studentName, testTitle, scor
   });
 };
 
-module.exports = { sendEmail, sendTestInvitation, sendResultNotification };
+/**
+ * Send OTP Email.
+ */
+const sendOTPEmail = async (email, otp, name) => {
+  console.log('Attempting to send OTP email to:', email);
+
+  const transporter = createTransporter();
+
+  // Verify connection first
+  try {
+    await transporter.verify();
+    console.log('Email transporter verified OK');
+  } catch (verifyError) {
+    console.error('Transporter verify failed:', verifyError.message);
+    throw verifyError;
+  }
+
+  const mailOptions = {
+    from: `"Digital Microsys" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: 'Your OTP for Digital Microsys - ' + otp,
+    text: `Your OTP is: ${otp}. Valid for 10 minutes.`,
+    html: `
+      <div style="font-family:Arial,sans-serif;
+        max-width:480px;margin:0 auto;
+        padding:20px;">
+        <div style="background:#2563eb;
+          padding:24px;border-radius:12px 12px 0 0;
+          text-align:center;">
+          <h1 style="color:#fff;margin:0;
+            font-size:22px;">
+            Digital Microsys
+          </h1>
+        </div>
+        <div style="background:#fff;
+          padding:32px;
+          border:1px solid #e5e7eb;
+          border-top:none;
+          border-radius:0 0 12px 12px;">
+          <h2 style="color:#111827;
+            font-size:18px;margin:0 0 16px;">
+            Hello ${name || 'Student'}!
+          </h2>
+          <p style="color:#6b7280;margin:0 0 24px;">
+            Your OTP for Digital Microsys 
+            registration is:
+          </p>
+          <div style="background:#eff6ff;
+            border:2px dashed #2563eb;
+            border-radius:10px;
+            padding:20px;
+            text-align:center;
+            margin-bottom:24px;">
+            <h1 style="color:#2563eb;
+              font-size:42px;
+              font-weight:800;
+              letter-spacing:10px;
+              margin:0;">
+              ${otp}
+            </h1>
+            <p style="color:#9ca3af;
+              font-size:12px;margin:8px 0 0;">
+              Valid for 10 minutes only
+            </p>
+          </div>
+          <p style="color:#ef4444;
+            font-size:13px;margin:0;">
+            Do not share this OTP with anyone.
+          </p>
+        </div>
+      </div>
+    `
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  
+  console.log('Email sent:', info.messageId);
+  return info;
+};
+
+module.exports = { sendEmail, sendTestInvitation, sendResultNotification, sendOTPEmail };

@@ -5,22 +5,11 @@ const User = require('../models/User');
 const authController = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
+// @route   POST /api/auth/send-otp
+router.post('/send-otp', authController.sendOTP);
+
 // @route   POST /api/auth/register (student only — admin cannot register publicly)
-router.post(
-  '/register',
-  [
-    body('name').trim().notEmpty().withMessage('Name is required'),
-    body('email').isEmail().withMessage('Valid email is required'),
-    body('password')
-      .isLength({ min: 6 })
-      .withMessage('Password must be at least 6 characters'),
-    body('rollNumber')
-      .trim()
-      .notEmpty()
-      .withMessage('Roll number is required'),
-  ],
-  authController.register
-);
+router.post('/register', authController.register);
 
 // @route   POST /api/auth/login (both student + admin, role sent in body)
 router.post(

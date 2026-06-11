@@ -4,12 +4,8 @@ import API from '../../services/api';
 import toast from 'react-hot-toast';
 import {
   HiOutlineArrowLeft,
-  HiOutlinePlus,
-  HiOutlineTrash,
   HiOutlineArrowUpTray,
   HiOutlineArrowDownTray,
-  HiOutlineDocumentText,
-  HiOutlineTableCells,
 } from 'react-icons/hi2';
 
 const UploadQuestions = () => {
@@ -24,7 +20,7 @@ const UploadQuestions = () => {
   const [submitting, setSubmitting] = useState(false);
 
   // Manual entry state
-  const emptyQ = { questionNo: '', questionText: '', optionA: '', optionB: '', optionC: '', optionD: '', marks: 1 };
+  const emptyQ = { questionNo: '', questionText: '', optionA: '', optionB: '', optionC: '', optionD: '', optionE: '', showOptionE: false, marks: 1 };
   const [questions, setQuestions] = useState([{ ...emptyQ }]);
 
   // CSV state
@@ -64,13 +60,14 @@ const UploadQuestions = () => {
 
   const handleManualSubmit = async () => {
     const valid = questions.every((q) => q.questionText && q.optionA && q.optionB && q.optionC && q.optionD);
-    if (!valid) return toast.error('All question fields are required');
+    if (!valid) return toast.error('All required question fields (A, B, C, D) must be filled');
 
     setSubmitting(true);
     try {
       const payload = questions.map((q, idx) => ({
         ...q,
         questionNo: q.questionNo ? Number(q.questionNo) : (existing.length + idx + 1),
+        optionE: q.showOptionE ? q.optionE : '',
         marks: Number(q.marks) || 1,
       }));
       const res = await API.post(`/tests/${id}/questions`, { questions: payload });
@@ -130,7 +127,7 @@ const UploadQuestions = () => {
   };
 
   const downloadSampleCSV = () => {
-    const csv = 'questionNo,questionText,optionA,optionB,optionC,optionD,marks\n1,What is 2+2?,3,4,5,6,1\n2,Capital of India?,Mumbai,Delhi,Chennai,Kolkata,1';
+    const csv = 'questionNo,questionText,optionA,optionB,optionC,optionD,optionE,marks\n1,What is a primary key?,Unique identifier,Foreign key,Index,Constraint,,1\n2,Which SQL command retrieves data?,INSERT,UPDATE,SELECT,DELETE,,1\n3,What does NULL mean in SQL?,Zero value,Empty string,Unknown value,False value,No value,1';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -204,7 +201,8 @@ const UploadQuestions = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {/* Options A B C D */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                 {['A', 'B', 'C', 'D'].map((opt) => (
                   <div key={opt}>
                     <label style={labelStyle}>Option {opt} *</label>
@@ -212,6 +210,70 @@ const UploadQuestions = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Option E — toggle */}
+              {!q.showOptionE ? (
+                <button
+                  type="button"
+                  onClick={() => updateQuestion(idx, 'showOptionE', true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'transparent',
+                    border: '1px dashed var(--border-input)',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    color: 'var(--text-muted)',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    marginBottom: '12px'
+                  }}
+                >
+                  + Add Option E (optional)
+                </button>
+              ) : (
+                <div style={{marginBottom: '12px'}}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '6px'
+                  }}>
+                    <label style={{
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: 'var(--accent-blue)',
+                      textTransform: 'uppercase'
+                    }}>Option E (optional)</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateQuestion(idx, 'showOptionE', false);
+                        updateQuestion(idx, 'optionE', '');
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--accent-red)',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Remove E
+                    </button>
+                  </div>
+                  <input
+                    value={q.optionE || ''}
+                    onChange={(e) => updateQuestion(idx, 'optionE', e.target.value)}
+                    placeholder="Option E (optional)"
+                    style={{
+                      ...inputStyle,
+                      border: '1px solid var(--accent-blue)'
+                    }}
+                  />
+                </div>
+              )}
             </div>
           ))}
 
@@ -226,11 +288,22 @@ const UploadQuestions = () => {
         </div>
       ) : (
         <div className="question-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{
+            padding: '12px 16px',
+            background: 'rgba(79,142,247,0.08)',
+            border: '1px solid rgba(79,142,247,0.15)',
+            borderRadius: '10px',
+            marginBottom: '16px',
+            fontSize: '13px',
+            color: 'var(--text-secondary)'
+          }}>
+            ℹ️ CSV supports both 4-option and 5-option questions. For 4-option questions, leave the optionE column empty.
+            Column order: questionNo, questionText, optionA, optionB, optionC, optionD, optionE, marks
+          </div>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '20px' }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>Upload CSV File</label>
               <input ref={fileRef} type="file" accept=".csv" onChange={handleFileChange} style={{ display: 'block', width: '100%', padding: '10px', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '8px', color: 'var(--text-primary)' }} />
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>CSV format: questionNo, questionText, optionA, optionB, optionC, optionD, marks</p>
             </div>
             <button onClick={downloadSampleCSV} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-hover)', border: '1px solid var(--border-input)', borderRadius: '8px', padding: '10px 16px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', marginTop: '28px' }}>
               <HiOutlineArrowDownTray size={16} /> Sample CSV
@@ -250,19 +323,29 @@ const UploadQuestions = () => {
                       <th style={thStyle}>B</th>
                       <th style={thStyle}>C</th>
                       <th style={thStyle}>D</th>
+                      <th style={thStyle}>E</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {csvPreview.map((row, i) => (
-                      <tr key={i} style={{ borderTop: '1px solid var(--border-color)' }}>
-                        <td style={tdStyle}>{row.questionno || i + 1}</td>
-                        <td style={tdStyle}>{row.questiontext || row.question}</td>
-                        <td style={tdStyle}>{row.optiona}</td>
-                        <td style={tdStyle}>{row.optionb}</td>
-                        <td style={tdStyle}>{row.optionc}</td>
-                        <td style={tdStyle}>{row.optiond}</td>
-                      </tr>
-                    ))}
+                    {csvPreview.map((row, i) => {
+                      const getField = (r, field) => {
+                        const key = Object.keys(r).find(
+                          k => k.toLowerCase().trim() === field.toLowerCase()
+                        );
+                        return key ? r[key] : '';
+                      };
+                      return (
+                        <tr key={i} style={{ borderTop: '1px solid var(--border-color)' }}>
+                          <td style={tdStyle}>{getField(row,'questionno') || i+1}</td>
+                          <td style={tdStyle}>{getField(row,'questiontext')}</td>
+                          <td style={tdStyle}>{getField(row,'optiona')}</td>
+                          <td style={tdStyle}>{getField(row,'optionb')}</td>
+                          <td style={tdStyle}>{getField(row,'optionc')}</td>
+                          <td style={tdStyle}>{getField(row,'optiond')}</td>
+                          <td style={tdStyle}>{getField(row,'optione') || '—'}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -291,6 +374,7 @@ const UploadQuestions = () => {
                   <th style={thStyle}>B</th>
                   <th style={thStyle}>C</th>
                   <th style={thStyle}>D</th>
+                  <th style={thStyle}>E</th>
                   <th style={thStyle}>Marks</th>
                 </tr>
               </thead>
@@ -303,6 +387,7 @@ const UploadQuestions = () => {
                     <td style={tdStyle}>{q.optionB}</td>
                     <td style={tdStyle}>{q.optionC}</td>
                     <td style={tdStyle}>{q.optionD}</td>
+                    <td style={tdStyle}>{q.optionE || '—'}</td>
                     <td style={tdStyle}>{q.marks}</td>
                   </tr>
                 ))}

@@ -4,6 +4,25 @@ import API from '../../services/api';
 import toast from 'react-hot-toast';
 import { HiOutlineArrowLeft } from 'react-icons/hi2';
 
+// Convert local datetime input to UTC ISO string
+const localToUTC = (localDateTimeStr) => {
+  if (!localDateTimeStr) return null;
+  const localDate = new Date(localDateTimeStr);
+  return localDate.toISOString();
+};
+
+// Convert UTC ISO string to local datetime-local
+const utcToLocal = (utcDateStr) => {
+  if (!utcDateStr) return '';
+  const date = new Date(utcDateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 const EditTest = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -26,8 +45,8 @@ const EditTest = () => {
         title: t.title || '',
         description: t.description || '',
         subject: t.subject || '',
-        startTime: t.startTime ? new Date(t.startTime).toISOString().slice(0, 16) : '',
-        endTime: t.endTime ? new Date(t.endTime).toISOString().slice(0, 16) : '',
+        startTime: utcToLocal(t.startTime),
+        endTime: utcToLocal(t.endTime),
         duration: t.duration || 60,
         maxAttempts: t.maxAttempts || 1,
         negativeMarking: t.negativeMarking || false,
@@ -58,8 +77,8 @@ const EditTest = () => {
         maxAttempts: Number(form.maxAttempts),
         marksPerQuestion: Number(form.marksPerQuestion),
         negativeMarks: form.negativeMarking ? Number(form.negativeMarks) : 0,
-        startTime: form.startTime || undefined,
-        endTime: form.endTime || undefined,
+        startTime: localToUTC(form.startTime) || undefined,
+        endTime: localToUTC(form.endTime) || undefined,
       };
       await API.put(`/tests/${id}`, payload);
       toast.success('Test updated!');
