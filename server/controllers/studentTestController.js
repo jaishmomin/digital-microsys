@@ -4,6 +4,8 @@ const AnswerKey = require('../models/AnswerKey');
 const Result = require('../models/Result');
 const Violation = require('../models/Violation');
 const evaluateAnswers = require('../utils/evaluateAnswers');
+const CodingProblem = require('../models/CodingProblem');
+const CodingSubmission = require('../models/CodingSubmission');
 
 /**
  * @desc    Get available tests for student (live + upcoming)
@@ -23,7 +25,7 @@ exports.getAvailableTests = async (req, res, next) => {
         { startTime: { $gt: now } },
       ],
     })
-      .select('title description subject startTime endTime duration maxAttempts marksPerQuestion totalMarks')
+      .select('title description subject startTime endTime duration maxAttempts marksPerQuestion totalMarks testType')
       .sort({ startTime: 1 });
 
     // Enrich with question count + attempt status
@@ -62,7 +64,38 @@ exports.getAvailableTests = async (req, res, next) => {
       })
     );
 
-    res.json({ success: true, data: enriched });
+    const testsWithCodingInfo = await Promise.all(enriched.map(async (test) => {
+      const testObj = test;
+
+      // Default values for mcq-only tests
+      testObj.codingProblemCount = 0;
+      testObj.hasAttemptedCoding = false;
+
+      if (testObj.testType === 'coding' || testObj.testType === 'combined') {
+        const codingCount = await CodingProblem.countDocuments({
+          testId: testObj._id
+        });
+        testObj.codingProblemCount = codingCount;
+
+        const codingSubmission = await CodingSubmission.findOne({
+          studentId: req.user._id,
+          testId: testObj._id
+        });
+        testObj.hasAttemptedCoding = !!codingSubmission;
+      }
+
+      return testObj;
+    }));
+
+    console.log('Tests with coding info:', testsWithCodingInfo.map(t => ({
+      title: t.title,
+      testType: t.testType,
+      codingProblemCount: t.codingProblemCount,
+      hasAttemptedCoding: t.hasAttemptedCoding,
+      hasAttemptedMCQ: t.hasAttemptedMCQ ?? t.hasAttempted ?? 'unknown_field'
+    })));
+
+    res.json({ success: true, data: testsWithCodingInfo });
   } catch (error) {
     next(error);
   }
@@ -76,11 +109,13 @@ exports.getAvailableTests = async (req, res, next) => {
 exports.getTestForAttempt = async (req, res, next) => {
   try {
     const test = await Test.findById(req.params.id)
-      .select('title description subject startTime endTime duration maxAttempts marksPerQuestion negativeMarking negativeMarks totalMarks');
+      .select('title description subject startTime endTime duration maxAttempts marksPerQuestion negativeMarking negativeMarks totalMarks testType');
 
     if (!test) {
       return res.status(404).json({ success: false, message: 'Test not found' });
     }
+
+    console.log('getTestForAttempt returning testType:', test.testType);
 
     const now = new Date();
     const start = new Date(test.startTime);
@@ -135,6 +170,7 @@ exports.getTestForAttempt = async (req, res, next) => {
       data: {
         testId: test._id,
         title: test.title,
+        testType: test.testType,
         subject: test.subject,
         duration: effectiveDuration, // in seconds
         totalQuestions: questions.length,
@@ -247,21 +283,38 @@ exports.submitTest = async (req, res, next) => {
       unattempted: result.unattempted
     });
 
-    res.status(201).json({
-      success: true,
-      message: autoSubmitted
-        ? 'Test auto-submitted due to violation'
-        : 'Test submitted successfully',
-      data: {
-        resultId: result._id,
-        score,
-        totalMarks,
-        percentage,
-        correctAnswers,
-        incorrectAnswers,
-        unattempted,
-      },
+    console.log('Sending response with:', {
+      resultId: result._id,
+      score: result.score,
+      percentage: result.percentage
     });
+
+    try {
+      return res.status(201).json({
+        success: true,
+        message: autoSubmitted
+          ? 'Test auto-submitted due to violation'
+          : 'Test submitted successfully',
+        result: {
+          _id: result._id,
+          score: result.score,
+          percentage: result.percentage,
+          correctAnswers: result.correctAnswers,
+          incorrectAnswers: result.incorrectAnswers,
+          unattempted: result.unattempted,
+          autoSubmitted: result.autoSubmitted
+        },
+        resultId: result._id
+      });
+    } catch (responseError) {
+      console.error('Error building response (Result WAS saved):', responseError.message);
+      // Result already saved — return success with minimal data
+      return res.status(201).json({
+        success: true,
+        message: 'Test submitted successfully',
+        resultId: result._id
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -275,7 +328,7 @@ exports.submitTest = async (req, res, next) => {
 exports.getMyResults = async (req, res, next) => {
   try {
     const results = await Result.find({ studentId: req.user._id })
-      .populate('testId', 'title subject totalMarks duration startTime')
+      .populate('testId', 'title subject totalMarks duration startTime testType')
       .sort({ submittedAt: -1 });
 
     res.json({ success: true, data: results });

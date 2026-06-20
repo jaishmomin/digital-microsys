@@ -50,6 +50,8 @@ const ActiveTest = ({ testData }) => {
   const [showPalette, setShowPalette] = useState(false);
   const [state, dispatch] = useReducer(testReducer, initialState);
   
+  const isCombinedTest = testData?.testType === 'combined';
+
   // STEP 1: Add these refs at top of component
   const autoSubmitCalledRef = useRef(false);
   const answersRef = useRef({});
@@ -147,7 +149,22 @@ const ActiveTest = ({ testData }) => {
       }
 
       if (resultId) {
-        navigate(`/student/results/${resultId}`, { replace: true });
+        if (isCombinedTest && reason === 'manual') {
+          console.log('[Next Section] Carrying forward remaining time:', secondsLeftRef.current, 'seconds');
+          navigate(`/student/coding-test/${currentTestId}`, { 
+            state: { 
+              mcqResultId: resultId, 
+              fromCombinedMCQ: true,
+              remainingSeconds: secondsLeftRef.current
+            },
+            replace: true 
+          });
+        } else if (isCombinedTest && reason === 'timerExpired') {
+          // Time is up, skip coding and go to combined result
+          navigate(`/student/combined-result/${currentTestId}`, { replace: true });
+        } else {
+          navigate(`/student/results/${resultId}`, { replace: true });
+        }
       } else {
         console.warn('No resultId in response');
         navigate('/student/results');
@@ -189,7 +206,10 @@ const ActiveTest = ({ testData }) => {
     const unanswered = questionsList.length - Object.keys(answersRef.current).length;
     
     if (unanswered > 0) {
-      const confirm = window.confirm(`${unanswered} questions unanswered. Submit anyway?`);
+      const confirmMsg = isCombinedTest
+        ? `${unanswered} questions unanswered. Continue to Coding section anyway? You won't be able to return to MCQs after this.`
+        : `${unanswered} questions unanswered. Submit anyway?`;
+      const confirm = window.confirm(confirmMsg);
       if (!confirm) return;
     }
     
@@ -428,7 +448,7 @@ const ActiveTest = ({ testData }) => {
           </button>
           <button onClick={handleManualSubmit} 
             style={{ padding: '8px 20px', borderRadius: '8px', background: 'var(--accent-red)', color: '#ffffff', border: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-            <HiOutlinePaperAirplane size={16} /> Submit
+            <HiOutlinePaperAirplane size={16} /> {isCombinedTest ? 'Next Section: Coding →' : 'Submit'}
           </button>
         </div>
 
@@ -457,12 +477,20 @@ const TakeTest = () => {
       try {
         const res = await API.get(`/student/tests/${id}/start`);
         console.log('RAW API RESPONSE:', res.data);
+        const testObj = res.data.data || res.data;
+        
+        console.log('TakeTest loaded test:', {
+          title: testObj?.title,
+          testType: testObj?.testType,
+          isCombinedTest: testObj?.testType === 'combined'
+        });
+
         console.log('duration field:', 
           res.data?.duration || 
           res.data?.test?.duration ||
           res.data?.data?.duration
         );
-        setTestData(res.data.data || res.data);
+        setTestData(testObj);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load test');
         toast.error(err.response?.data?.message || 'Cannot start this test');

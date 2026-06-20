@@ -19,6 +19,7 @@ const CreateTest = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [testType, setTestType] = useState('mcq');
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -55,10 +56,19 @@ const CreateTest = () => {
         negativeMarks: form.negativeMarking ? Number(form.negativeMarks) : 0,
         startTime: localToUTC(form.startTime) || undefined,
         endTime: localToUTC(form.endTime) || undefined,
+        testType: testType,
       };
       const res = await API.post('/tests', payload);
       toast.success('Test created successfully!');
-      navigate(`/admin/tests/${res.data.data._id}/questions`);
+      
+      const testId = res.data.data._id;
+      if (testType === 'mcq') {
+        navigate(`/admin/tests/${testId}/questions`);
+      } else if (testType === 'coding') {
+        navigate(`/admin/tests/${testId}/coding`);
+      } else if (testType === 'combined') {
+        navigate(`/admin/tests/${testId}/questions`);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create test');
     } finally {
@@ -102,12 +112,85 @@ const CreateTest = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
-        {/* Title */}
         <div style={{ marginBottom: '20px' }}>
           <label htmlFor="ct-title" style={labelStyle}>Test Title *</label>
           <input id="ct-title" name="title" value={form.title} onChange={handleChange} required
             style={inputStyle}
             placeholder="e.g. Data Structures Mid-Term 2025" />
+        </div>
+
+        {/* Test Type */}
+        <div style={{marginBottom: '24px'}}>
+          <label style={{
+            display: 'block',
+            fontSize: '13px',
+            fontWeight: '600',
+            color: 'var(--text-label)',
+            marginBottom: '12px'
+          }}>Test Type *</label>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '12px'
+          }}>
+            {[
+              { 
+                value: 'mcq', 
+                label: 'MCQ Only', 
+                icon: '📝',
+                desc: 'Multiple choice questions only'
+              },
+              { 
+                value: 'coding', 
+                label: 'Coding Only', 
+                icon: '💻',
+                desc: 'Programming problems only'
+              },
+              { 
+                value: 'combined', 
+                label: 'MCQ + Coding', 
+                icon: '🎯',
+                desc: 'Both sections combined'
+              }
+            ].map(opt => (
+              <div
+                key={opt.value}
+                onClick={() => setTestType(opt.value)}
+                style={{
+                  padding: '20px 16px',
+                  borderRadius: '12px',
+                  border: testType === opt.value
+                    ? '2px solid var(--accent-blue)'
+                    : '1px solid var(--border-color)',
+                  background: testType === opt.value
+                    ? 'var(--accent-blue-bg)'
+                    : 'var(--bg-surface)',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  transition: 'all 0.15s'
+                }}
+              >
+                <div style={{fontSize: '28px', 
+                  marginBottom: '8px'}}>
+                  {opt.icon}
+                </div>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: testType === opt.value
+                    ? 'var(--accent-blue)'
+                    : 'var(--text-primary)',
+                  marginBottom: '4px'
+                }}>{opt.label}</div>
+                <div style={{
+                  fontSize: '11px',
+                  color: 'var(--text-muted)',
+                  lineHeight: '1.4'
+                }}>{opt.desc}</div>
+              </div>
+            ))}
+          </div>
         </div>
         
         {/* Description */}

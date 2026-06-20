@@ -12,6 +12,7 @@ import {
   HiOutlineChartBarSquare,
   HiOutlinePlus,
   HiOutlineMagnifyingGlass,
+  HiOutlineCodeBracketSquare,
 } from 'react-icons/hi2';
 
 const ManageTests = () => {
@@ -204,7 +205,51 @@ const ManageTests = () => {
                       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     >
                       <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }}>
-                        <p style={{ fontWeight: '500', color: 'var(--text-primary)', marginBottom: '4px' }}>{test.title}</p>
+                        <div style={{display:'flex', alignItems:'center', gap:'8px', flexWrap: 'wrap', marginBottom: '4px'}}>
+                          <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{test.title}</span>
+                          
+                          {test.testType === 'coding' && (
+                            <span style={{
+                              background: 'rgba(168,85,247,0.12)',
+                              color: '#a855f7',
+                              border: '1px solid rgba(168,85,247,0.2)',
+                              borderRadius: '6px',
+                              padding: '2px 8px',
+                              fontSize: '11px',
+                              fontWeight: '600'
+                            }}>
+                              💻 CODING
+                            </span>
+                          )}
+                          
+                          {test.testType === 'combined' && (
+                            <span style={{
+                              background: 'rgba(59,130,246,0.12)',
+                              color: '#3b82f6',
+                              border: '1px solid rgba(59,130,246,0.2)',
+                              borderRadius: '6px',
+                              padding: '2px 8px',
+                              fontSize: '11px',
+                              fontWeight: '600'
+                            }}>
+                              🎯 MCQ + CODE
+                            </span>
+                          )}
+                          
+                          {(!test.testType || test.testType === 'mcq') && (
+                            <span style={{
+                              background: 'var(--bg-hover)',
+                              color: 'var(--text-muted)',
+                              border: '1px solid var(--border-color)',
+                              borderRadius: '6px',
+                              padding: '2px 8px',
+                              fontSize: '11px',
+                              fontWeight: '600'
+                            }}>
+                              📝 MCQ
+                            </span>
+                          )}
+                        </div>
                         <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{test.subject}</p>
                       </td>
                       <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)' }} className="hidden md:table-cell">
@@ -261,6 +306,13 @@ const ManageTests = () => {
                             onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                           >
                             <HiOutlineChartBarSquare size={16} />
+                          </Link>
+                          <Link to={`/admin/tests/${test._id}/coding`} title="Coding Problems"
+                            style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '6px', display: 'flex' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border-input)'; e.currentTarget.style.color = '#06b6d4'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                          >
+                            <HiOutlineCodeBracketSquare size={16} />
                           </Link>
                           <button onClick={() => openDeleteModal(test._id, test.title)} title="Delete"
                             style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '7px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}

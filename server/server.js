@@ -21,6 +21,7 @@ const testRoutes = require('./routes/testRoutes');
 const resultRoutes = require('./routes/resultRoutes');
 const userRoutes = require('./routes/userRoutes');
 const studentRoutes = require('./routes/studentRoutes');
+const codingRoutes = require('./routes/codingRoutes');
 
 // ─────────────────────────────────────────────
 //  Initialize Express
@@ -102,6 +103,7 @@ app.use('/api/tests', testRoutes);
 app.use('/api/results', resultRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/coding', codingRoutes);
 
 // ─────────────────────────────────────────────
 //  Error Handling

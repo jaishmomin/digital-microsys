@@ -28,6 +28,7 @@ const EditTest = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testType, setTestType] = useState('mcq');
   const [form, setForm] = useState({
     title: '', description: '', subject: '',
     startTime: '', endTime: '', duration: 60,
@@ -41,6 +42,7 @@ const EditTest = () => {
     try {
       const res = await API.get(`/tests/${id}`);
       const t = res.data.data;
+      setTestType(t.testType || 'mcq');
       setForm({
         title: t.title || '',
         description: t.description || '',
@@ -79,6 +81,7 @@ const EditTest = () => {
         negativeMarks: form.negativeMarking ? Number(form.negativeMarks) : 0,
         startTime: localToUTC(form.startTime) || undefined,
         endTime: localToUTC(form.endTime) || undefined,
+        testType: testType,
       };
       await API.put(`/tests/${id}`, payload);
       toast.success('Test updated!');
@@ -92,11 +95,12 @@ const EditTest = () => {
 
   const handlePublish = async () => {
     try {
-      await API.put(`/tests/${id}/publish`);
-      toast.success('Test published!');
+      const res = await API.put(`/tests/${id}/publish`);
+      toast.success(res.data?.message || 'Test published successfully!');
       navigate('/admin/tests');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Cannot publish');
+      toast.error(err.response?.data?.message || 'Failed to publish test. Please try again.');
+      console.error('Publish error:', err.response?.data);
     }
   };
 
@@ -149,6 +153,81 @@ const EditTest = () => {
             <label htmlFor="et-title" style={labelStyle}>Test Title *</label>
             <input id="et-title" name="title" value={form.title} onChange={handleChange} required style={inputStyle} />
           </div>
+
+          {/* Test Type */}
+          <div style={{marginBottom: '24px'}}>
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: 'var(--text-label)',
+              marginBottom: '12px'
+            }}>Test Type *</label>
+            
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px'
+            }}>
+              {[
+                { 
+                  value: 'mcq', 
+                  label: 'MCQ Only', 
+                  icon: '📝',
+                  desc: 'Multiple choice questions only'
+                },
+                { 
+                  value: 'coding', 
+                  label: 'Coding Only', 
+                  icon: '💻',
+                  desc: 'Programming problems only'
+                },
+                { 
+                  value: 'combined', 
+                  label: 'MCQ + Coding', 
+                  icon: '🎯',
+                  desc: 'Both sections combined'
+                }
+              ].map(opt => (
+                <div
+                  key={opt.value}
+                  onClick={() => setTestType(opt.value)}
+                  style={{
+                    padding: '20px 16px',
+                    borderRadius: '12px',
+                    border: testType === opt.value
+                      ? '2px solid var(--accent-blue)'
+                      : '1px solid var(--border-color)',
+                    background: testType === opt.value
+                      ? 'var(--accent-blue-bg)'
+                      : 'var(--bg-surface)',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  <div style={{fontSize: '28px', 
+                    marginBottom: '8px'}}>
+                    {opt.icon}
+                  </div>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: testType === opt.value
+                      ? 'var(--accent-blue)'
+                      : 'var(--text-primary)',
+                    marginBottom: '4px'
+                  }}>{opt.label}</div>
+                  <div style={{
+                    fontSize: '11px',
+                    color: 'var(--text-muted)',
+                    lineHeight: '1.4'
+                  }}>{opt.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div>
             <label htmlFor="et-desc" style={labelStyle}>Description</label>
             <textarea id="et-desc" name="description" value={form.description} onChange={handleChange} rows={3} style={{ ...inputStyle, resize: 'none' }} />

@@ -13,6 +13,7 @@ import {
   HiOutlinePlayCircle,
   HiOutlineCheckBadge,
   HiOutlineArrowRight,
+  HiOutlineCodeBracketSquare,
 } from 'react-icons/hi2';
 
 const StudentDashboard = () => {
@@ -173,7 +174,43 @@ const StudentDashboard = () => {
                   </div>
 
                   {/* Title */}
-                  <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>{test.title}</h3>
+                  <div style={{
+                    display:'flex', alignItems:'center', 
+                    gap:'8px', flexWrap:'wrap',
+                    marginBottom: '4px'
+                  }}>
+                    <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 600, color: 'var(--text-primary)' }}>{test.title}</h3>
+                    
+                    {test.testType === 'coding' && (
+                      <span style={{
+                        background: 'rgba(168,85,247,0.12)',
+                        color: '#a855f7',
+                        border: '1px solid rgba(168,85,247,0.2)',
+                        borderRadius: '6px',
+                        padding: '2px 8px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        💻 Coding
+                      </span>
+                    )}
+                    
+                    {test.testType === 'combined' && (
+                      <span style={{
+                        background: 'rgba(59,130,246,0.12)',
+                        color: '#3b82f6',
+                        border: '1px solid rgba(59,130,246,0.2)',
+                        borderRadius: '6px',
+                        padding: '2px 8px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        🎯 MCQ + Coding
+                      </span>
+                    )}
+                  </div>
 
                   {/* Info */}
                   <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
@@ -185,30 +222,153 @@ const StudentDashboard = () => {
                     {formatDate(test.startTime)} – {formatDate(test.endTime)}
                   </p>
 
+                  {/* Combined Progress */}
+                  {test.testType === 'combined' && (
+                    <div style={{
+                      display:'flex', gap:'12px',
+                      marginBottom:'12px', 
+                      fontSize:'12px',
+                      color: 'var(--text-secondary)'
+                    }}>
+                      <span style={{
+                        display:'flex', alignItems:'center',
+                        gap:'4px',
+                        color: test.hasAttempted
+                          ? 'var(--accent-green)'
+                          : 'var(--text-muted)'
+                      }}>
+                        {test.hasAttempted ? '✓' : '○'} 
+                        MCQ Section
+                      </span>
+                      <span style={{
+                        display:'flex', alignItems:'center',
+                        gap:'4px',
+                        color: test.hasAttemptedCoding
+                          ? 'var(--accent-green)'
+                          : 'var(--text-muted)'
+                      }}>
+                        {test.hasAttemptedCoding ? '✓' : '○'} 
+                        Coding Section
+                      </span>
+                    </div>
+                  )}
+
                   {/* Action */}
-                  {test.hasAttempted ? (
-                    <div style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 6,
-                      background: 'var(--accent-green-bg)', color: 'var(--accent-green)',
-                      borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 600,
-                    }}>
-                      <HiOutlineCheckBadge size={16} />
-                      Attempted · {test.bestPercentage}%
-                    </div>
-                  ) : isLive ? (
-                    <button onClick={() => navigate(`/student/test/${test._id}`)}
-                      className="dms-btn dms-btn-primary dms-btn-full" style={{ padding: '10px 0', fontSize: 13 }}>
-                      <HiOutlinePlayCircle size={18} /> Start Test →
+                  {(!test.testType || test.testType === 'mcq') && (
+                    <>
+                      {test.hasAttempted ? (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          background: 'var(--accent-green-bg)', color: 'var(--accent-green)',
+                          borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 600,
+                        }}>
+                          <HiOutlineCheckBadge size={16} />
+                          Attempted · {test.bestPercentage}%
+                        </div>
+                      ) : isLive ? (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => navigate(`/student/test/${test._id}`)}
+                            className="dms-btn dms-btn-primary" style={{ padding: '10px 16px', fontSize: 13, flex: 1 }}>
+                            <HiOutlinePlayCircle size={18} /> MCQ Test →
+                          </button>
+                          <button onClick={() => navigate(`/student/coding-test/${test._id}`)}
+                            style={{ padding: '10px 16px', fontSize: 13, background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600', fontFamily: "'Sora', sans-serif", transition: 'all 0.15s' }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#06b6d4'; e.currentTarget.style.color = '#06b6d4'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}>
+                            <HiOutlineCodeBracketSquare size={16} /> Code
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          color: 'var(--text-muted)', fontSize: 13,
+                          background: 'var(--bg-hover)', borderRadius: 10,
+                          padding: '10px 16px', justifyContent: 'center',
+                        }}>
+                          <HiOutlineClock size={16} /> Starts in {getTimeUntil(test.startTime)}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* NEW: Coding Only test button */}
+                  {test.testType === 'coding' && (
+                    <button
+                      disabled={!isLive || test.hasAttemptedCoding}
+                      onClick={() => navigate(`/student/coding-test/${test._id}`)}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: test.hasAttemptedCoding
+                          ? 'var(--bg-hover)'
+                          : (!isLive 
+                            ? 'var(--bg-hover)' 
+                            : 'var(--accent-blue)'),
+                        color: test.hasAttemptedCoding
+                          ? 'var(--text-muted)'
+                          : (!isLive 
+                            ? 'var(--text-muted)' 
+                            : '#fff'),
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: (!isLive || test.hasAttemptedCoding)
+                          ? 'not-allowed' : 'pointer',
+                        marginTop: '8px'
+                      }}
+                    >
+                      {test.hasAttemptedCoding
+                        ? '✓ Submitted'
+                        : !isLive
+                          ? 'Not Live Yet'
+                          : '💻 Start Coding Test →'}
                     </button>
-                  ) : (
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      color: 'var(--text-muted)', fontSize: 13,
-                      background: 'var(--bg-hover)', borderRadius: 10,
-                      padding: '10px 16px', justifyContent: 'center',
-                    }}>
-                      <HiOutlineClock size={16} /> Starts in {getTimeUntil(test.startTime)}
-                    </div>
+                  )}
+
+                  {/* NEW: Combined test button */}
+                  {test.testType === 'combined' && (
+                    <button
+                      disabled={
+                        !isLive || 
+                        (test.hasAttempted && test.hasAttemptedCoding)
+                      }
+                      onClick={() => {
+                        const mcqDone = test.hasAttempted;
+                        if (!mcqDone) {
+                          navigate(`/student/test/${test._id}`);
+                        } else if (!test.hasAttemptedCoding) {
+                          navigate(`/student/coding-test/${test._id}`);
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: (test.hasAttempted && test.hasAttemptedCoding) || !isLive
+                          ? 'var(--bg-hover)'
+                          : 'var(--accent-blue)',
+                        color: (test.hasAttempted && test.hasAttemptedCoding) || !isLive
+                          ? 'var(--text-muted)'
+                          : '#fff',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: (!isLive || (test.hasAttempted && test.hasAttemptedCoding)) 
+                          ? 'not-allowed' : 'pointer',
+                        marginTop: '8px'
+                      }}
+                    >
+                      {(() => {
+                        const mcqDone = test.hasAttempted;
+                        const codingDone = test.hasAttemptedCoding;
+                        
+                        if (!isLive) return 'Not Live Yet';
+                        if (mcqDone && codingDone) return '✓ Completed';
+                        if (!mcqDone) return '🎯 Start Test (MCQ + Coding) →';
+                        return '💻 Continue to Coding →';
+                      })()}
+                    </button>
                   )}
                 </div>
               );

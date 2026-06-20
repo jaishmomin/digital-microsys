@@ -21,12 +21,18 @@ import UploadQuestions from './pages/admin/UploadQuestions';
 import UploadAnswerKey from './pages/admin/UploadAnswerKey';
 import ManageStudents from './pages/admin/ManageStudents';
 import ViewResults from './pages/admin/ViewResults';
+import ManageCodingProblems from './pages/admin/ManageCodingProblems';
+import ViewCodingSubmissions from './pages/admin/ViewCodingSubmissions';
+import AdminCombinedResult from './pages/admin/AdminCombinedResult';
 
 // Student Pages
 import StudentDashboard from './pages/student/StudentDashboard';
 import TakeTest from './pages/student/TakeTest';
 import MyResults from './pages/student/MyResults';
 import ResultDetail from './pages/student/ResultDetail';
+import TakeCodingTest from './pages/student/TakeCodingTest';
+import CodingResults from './pages/student/CodingResults';
+import CombinedResult from './pages/student/CombinedResult';
 
 const App = () => {
   const { isAuthenticated, user, loading } = useAuth();
@@ -74,7 +80,10 @@ const App = () => {
           <Route path="/admin/tests/:id/answerkey" element={<UploadAnswerKey />} />
           <Route path="/admin/students" element={<ManageStudents />} />
           <Route path="/admin/results" element={<ViewResults />} />
+          <Route path="/admin/tests/:id/coding" element={<ManageCodingProblems />} />
+          <Route path="/admin/tests/:id/coding-results" element={<ViewCodingSubmissions />} />
         </Route>
+        <Route path="/admin/combined-result/:testId/:studentId" element={<AdminCombinedResult />} />
       </Route>
 
       {/* Protected: Student */}
@@ -85,6 +94,9 @@ const App = () => {
           <Route path="/student/results/:id" element={<ResultDetail />} />
         </Route>
         <Route path="/student/test/:id" element={<TakeTest />} />
+        <Route path="/student/coding-test/:id" element={<TakeCodingTest />} />
+        <Route path="/student/coding-results/:testId" element={<CodingResults />} />
+        <Route path="/student/combined-result/:testId" element={<CombinedResult />} />
       </Route>
 
       {/* Legacy redirect */}

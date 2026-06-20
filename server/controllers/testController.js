@@ -4,6 +4,7 @@ const Test = require('../models/Test');
 const Question = require('../models/Question');
 const AnswerKey = require('../models/AnswerKey');
 const Result = require('../models/Result');
+const CodingProblem = require('../models/CodingProblem');
 
 /**
  * @desc    Create a new test
@@ -27,6 +28,8 @@ exports.createTest = async (req, res, next) => {
       accessCode,
       tags,
       settings,
+      testType,
+      codingMarks,
     } = req.body;
 
     const test = await Test.create({
@@ -45,6 +48,8 @@ exports.createTest = async (req, res, next) => {
       accessCode: accessCode || '',
       tags: tags || [],
       settings: settings || {},
+      testType: testType || 'mcq',
+      codingMarks: codingMarks || 0,
     });
 
     res.status(201).json({
@@ -154,7 +159,7 @@ exports.updateTest = async (req, res, next) => {
     const allowedFields = [
       'title', 'description', 'subject', 'startTime', 'endTime', 'duration',
       'maxAttempts', 'negativeMarking', 'marksPerQuestion', 'negativeMarks',
-      'passingMarks', 'status', 'accessCode', 'tags', 'settings',
+      'passingMarks', 'status', 'accessCode', 'tags', 'settings', 'testType', 'codingMarks',
     ];
 
     const updates = {};
@@ -477,24 +482,71 @@ exports.publishTest = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Test not found' });
     }
 
-    const questionCount = await Question.countDocuments({ testId: test._id });
-    if (questionCount === 0) {
+    const testType = test.testType || 'mcq';
+
+    const mcqCount = await Question.countDocuments({ testId: test._id });
+    const codingCount = await CodingProblem.countDocuments({ testId: test._id });
+
+    console.log('Publish validation:', {
+      testType,
+      mcqCount,
+      codingCount
+    });
+
+    if (testType === 'mcq' && mcqCount === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Cannot publish a test with no questions',
+        message: 'Cannot publish an MCQ test with no questions. Please add questions first.'
       });
     }
 
-    const answerKey = await AnswerKey.findOne({ testId: test._id });
-    if (!answerKey) {
+    if (testType === 'coding' && codingCount === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Cannot publish a test without an answer key',
+        message: 'Cannot publish a Coding test with no coding problems. Please add at least one coding problem first.'
       });
+    }
+
+    if (testType === 'combined' && mcqCount === 0 && codingCount === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot publish a Combined test with no content. Please add MCQ questions and coding problems.'
+      });
+    }
+
+    if (testType === 'combined' && mcqCount === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Combined test is missing MCQ questions. Please add questions to the MCQ section.'
+      });
+    }
+
+    if (testType === 'combined' && codingCount === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Combined test is missing coding problems. Please add at least one coding problem.'
+      });
+    }
+
+    if (testType === 'mcq' || testType === 'combined') {
+      const answerKey = await AnswerKey.findOne({ testId: test._id });
+      if (!answerKey) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot publish a test without an answer key',
+        });
+      }
     }
 
     test.status = 'published';
-    test.totalMarks = questionCount * test.marksPerQuestion;
+    if (testType === 'mcq') {
+      test.totalMarks = mcqCount * test.marksPerQuestion;
+    } else if (testType === 'combined') {
+      // Just keep existing logic or add codingMarks if available, but to be safe:
+      test.totalMarks = (mcqCount * test.marksPerQuestion) + (test.codingMarks || 0);
+    } else {
+      test.totalMarks = test.codingMarks || 0;
+    }
     await test.save();
 
     res.json({ success: true, message: 'Test published', data: test });

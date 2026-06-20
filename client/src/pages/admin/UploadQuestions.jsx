@@ -14,6 +14,7 @@ const UploadQuestions = () => {
   const fileRef = useRef(null);
 
   const [testTitle, setTestTitle] = useState('');
+  const [testType, setTestType] = useState('');
   const [activeTab, setActiveTab] = useState('manual');
   const [existing, setExisting] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,7 @@ const UploadQuestions = () => {
         API.get(`/tests/${id}/questions`),
       ]);
       setTestTitle(testRes.data.data.title);
+      setTestType(testRes.data.data.testType);
       setExisting(qRes.data.data);
     } catch (err) {
       toast.error('Failed to load test');
@@ -394,6 +396,57 @@ const UploadQuestions = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Banner for Combined Tests */}
+      {testType === 'combined' && existing.length > 0 && (
+        <div style={{
+          marginTop: '24px',
+          padding: '20px 24px',
+          background: 'var(--accent-blue-bg)',
+          border: '1px solid var(--accent-blue-border)',
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div>
+            <p style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+              marginBottom: '4px'
+            }}>
+              ✅ MCQ Section Ready ({existing.length} questions)
+            </p>
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)'
+            }}>
+              This is a Combined Test. 
+              Now add coding problems to 
+              complete the setup.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate(`/admin/tests/${id}/coding`)}
+            style={{
+              background: 'var(--accent-blue)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '11px 24px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Add Coding Problems →
+          </button>
         </div>
       )}
 

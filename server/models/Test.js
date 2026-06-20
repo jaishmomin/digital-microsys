@@ -23,6 +23,15 @@ const testSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    testType: {
+      type: String,
+      enum: ['mcq', 'coding', 'combined'],
+      default: 'mcq',
+    },
+    codingMarks: {
+      type: Number,
+      default: 0,
+    },
     totalMarks: {
       type: Number,
       default: 0,

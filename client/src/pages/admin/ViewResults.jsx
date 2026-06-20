@@ -268,6 +268,9 @@ const ViewResults = () => {
                   <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>%</th>
                   <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }} className="hidden md:table-cell">Time</th>
                   <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }} className="hidden lg:table-cell">Flags</th>
+                  {testInfo?.testType === 'combined' && (
+                    <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Combined Score</th>
+                  )}
                   <th style={{ padding: '14px 20px', fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>PDF</th>
                 </tr>
               </thead>
@@ -333,6 +336,25 @@ const ViewResults = () => {
                           )}
                         </div>
                       </td>
+                      {testInfo?.testType === 'combined' && (
+                        <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }}>
+                          <button
+                            onClick={() => navigate(`/admin/combined-result/${testInfo._id}/${r.studentId?._id}`)}
+                            style={{
+                              background: 'var(--accent-blue-bg)',
+                              border: '1px solid var(--accent-blue-border)',
+                              borderRadius: '6px',
+                              padding: '6px 12px',
+                              color: 'var(--accent-blue)',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            View Combined
+                          </button>
+                        </td>
+                      )}
                       <td style={{ padding: '16px 20px', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <button

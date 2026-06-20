@@ -173,9 +173,30 @@ const MyResults = () => {
                 </div>
 
                 {/* View detail arrow */}
-                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {r.testId?.testType === 'combined' ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/student/combined-result/${r.testId._id || r.testId}`);
+                      }}
+                      style={{
+                        background:'var(--accent-blue-bg)',
+                        border:'1px solid var(--accent-blue-border)',
+                        borderRadius:'8px',
+                        padding:'6px 14px',
+                        fontSize:'12px',
+                        color:'var(--accent-blue)',
+                        cursor:'pointer'
+                      }}
+                    >
+                      🎯 View Combined Result
+                    </button>
+                  ) : (
+                    <div />
+                  )}
                   <span style={{ fontSize: 12, color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    View Details <HiOutlineArrowRight size={12} />
+                    View MCQ Details <HiOutlineArrowRight size={12} />
                   </span>
                 </div>
               </div>

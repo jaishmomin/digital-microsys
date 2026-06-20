@@ -10,6 +10,7 @@ import {
   HiOutlineArrowRightOnRectangle,
   HiOutlineBars3,
   HiOutlineXMark,
+  HiOutlineCodeBracketSquare,
 } from 'react-icons/hi2';
 
 const DashboardLayout = () => {
