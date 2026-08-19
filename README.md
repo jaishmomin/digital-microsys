@@ -2,6 +2,8 @@
 
 > **Online Test Management System** — A full-stack web application for conducting, managing, and evaluating online examinations with built-in anti-cheat proctoring, real-time timer, auto-grading, and professional PDF report generation.
 
+🚀 **[Live Demo](https://digital-microsys.vercel.app/)**
+
 ---
 
 ## ✨ Features
@@ -127,6 +129,8 @@ digital-microsys/
 └── README.md
 
 ```
+
+---
 
 ## 📸 Screenshots
 
