@@ -125,7 +125,28 @@ digital-microsys/
 │   └── server.js
 │
 └── README.md
+
 ```
+
+## 📸 Screenshots
+
+### 🏠 Landing Page
+![Digital Microsys Landing Page](docs/screenshots/01-landing-page.png)
+
+### 🔐 Authentication
+![Login](docs/screenshots/02-login.png)
+
+### 👨‍💼 Admin Dashboard
+![Admin Dashboard](docs/screenshots/03-admin-dashboard.png)
+
+### 📝 Online MCQ Assessment
+![MCQ Test](docs/screenshots/04-mcq-test.png)
+
+### 💻 Coding Assessment
+![Coding Assessment](docs/screenshots/05-coding-assessment.png)
+
+### 📊 Results & Evaluation
+![Results](docs/screenshots/06-results.png)
 
 ---
 
@@ -138,7 +159,7 @@ digital-microsys/
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/your-username/digital-microsys.git
+git clone https://github.com/jaishmomin/digital-microsys.git
 cd digital-microsys
 ```
 
